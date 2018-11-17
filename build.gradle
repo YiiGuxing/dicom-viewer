@@ -1,0 +1,21 @@
+buildscript {
+    repositories {
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        jcenter()
+        mavenCentral()
+    }
+}
+
+allprojects {
+    version = "${version}${buildNumber ? '-' + buildNumber : ''}"
+    repositories {
+        maven { url = 'https://maven.aliyun.com/repository/public' }
+        maven { url = 'http://www.dcm4che.org/maven2/' }
+        jcenter()
+        mavenCentral()
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
