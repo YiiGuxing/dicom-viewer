@@ -1,4 +1,3 @@
 rootProject.name = 'dicom-viewer'
 include ':dicom'
 include ':app'
-include ':intellij-plugin'
