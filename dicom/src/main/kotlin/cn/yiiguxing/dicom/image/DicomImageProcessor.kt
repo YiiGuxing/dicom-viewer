@@ -1,12 +1,18 @@
 package cn.yiiguxing.dicom.image
 
+import javafx.scene.image.PixelWriter
 import org.dcm4che3.data.Attributes
 import org.dcm4che3.data.Tag
 import org.dcm4che3.image.Overlays
 import org.dcm4che3.image.PhotometricInterpretation
 import org.dcm4che3.image.StoredValue
 import org.dcm4che3.imageio.plugins.dcm.DicomMetaData
-import java.awt.image.*
+import org.dcm4che3.util.TagUtils
+import java.awt.image.DataBuffer
+import java.awt.image.Raster
+import java.awt.image.SampleModel
+import java.awt.image.WritableRaster
+import java.util.*
 
 class DicomImageProcessor(private val metadata: DicomMetaData) {
 
@@ -84,22 +90,170 @@ class DicomImageProcessor(private val metadata: DicomMetaData) {
         return windowWidth to windowCenter
     }
 
-    private fun calcMinMax(storedValue: StoredValue, sm: ComponentSampleModel, data: ByteArray): IntArray {
-        var min = Integer.MAX_VALUE
-        var max = Integer.MIN_VALUE
-        val w = sm.width
-        val h = sm.height
-        val stride = sm.scanlineStride
-        for (y in 0 until h) {
-            var i = y * stride
-            val end = i + w
-            while (i < end) {
-                val `val` = storedValue.valueOf(data[i++].toInt())
-                if (`val` < min) min = `val`
-                if (`val` > max) max = `val`
-            }
+    fun process(srcRaster: Raster, dst: PixelWriter, frameIndex: Int, processingBuffer: IntArray) {
+        val overlayGroupOffsets = getActiveOverlayGroupOffsets()
+        val overlayData = arrayOfNulls<ByteArray>(overlayGroupOffsets.size)
+        for (i in overlayGroupOffsets.indices) {
+            overlayData[i] = extractOverlay(overlayGroupOffsets[i], srcRaster)
         }
-        return intArrayOf(min, max)
+        applyLUTs(srcRaster, dst, frameIndex, 8, processingBuffer)
+        for (i in overlayGroupOffsets.indices) {
+            applyOverlay(overlayGroupOffsets[i], dst, frameIndex, 8, overlayData[i])
+        }
+    }
+
+    private fun applyLUTs(raster: Raster, dst: PixelWriter, frameIndex: Int, outBits: Int, processingBuffer: IntArray) {
+        val imgAttrs = metadata.attributes
+        val psAttrs = presentationState
+        val lutParam = lutFactory
+        if (psAttrs != null) {
+            lutParam.setModalityLUT(psAttrs)
+            lutParam.setVOI(
+                selectVOILUT(psAttrs, imgAttrs.getString(Tag.SOPInstanceUID), frameIndex + 1),
+                0, 0, false
+            )
+            lutParam.setPresentationLUT(psAttrs)
+        } else {
+            val sharedFctGroups = imgAttrs.getNestedDataset(
+                Tag.SharedFunctionalGroupsSequence
+            )
+            val frameFctGroups = imgAttrs.getNestedDataset(
+                Tag.PerFrameFunctionalGroupsSequence, frameIndex
+            )
+            lutParam.setModalityLUT(
+                selectFctGroup(
+                    imgAttrs, sharedFctGroups, frameFctGroups,
+                    Tag.PixelValueTransformationSequence
+                )
+            )
+            val ww = windowWidth
+            val wc = windowCenter
+            if (ww == null || ww == 0.0f) {
+                lutParam.setVOI(
+                    selectFctGroup(imgAttrs, sharedFctGroups, frameFctGroups, Tag.FrameVOILUTSequence),
+                    windowIndex,
+                    voiLUTIndex,
+                    isPreferWindow
+                )
+            }
+            if (ww == null || wc == null) {
+                lutParam.autoWindowing(imgAttrs, raster)
+            } else {
+                lutParam.setWindowWidth(ww)
+                lutParam.setWindowCenter(wc)
+            }
+            lutParam.setPresentationLUT(imgAttrs)
+        }
+        val lut = lutParam.createLUT(outBits)
+        if (inverse) {
+            lut.inverse()
+        }
+
+        lut.lookup(raster, dst,processingBuffer)
+    }
+
+    private fun applyOverlay(
+        gg0000: Int, raster: PixelWriter,
+        frameIndex: Int, outBits: Int, ovlyData: ByteArray?
+    ) {
+        var ovlyAttrs = metadata.attributes
+        val grayscaleValue: Int
+        val psAttrs = presentationState
+        if (psAttrs != null) {
+            if (psAttrs.containsValue(Tag.OverlayData or gg0000))
+                ovlyAttrs = psAttrs
+            grayscaleValue = Overlays.getRecommendedDisplayGrayscaleValue(psAttrs, gg0000)
+        } else
+            grayscaleValue = overlayGrayScaleValue
+        applyOverlay(
+            if (ovlyData != null) 0 else frameIndex, raster,
+            ovlyAttrs, gg0000, grayscaleValue.ushr(16 - outBits), ovlyData
+        )
+    }
+
+    fun applyOverlay(
+        frameIndex: Int, writer: PixelWriter,
+        attrs: Attributes, gg0000: Int, pixelValue: Int, ovlyData: ByteArray?
+    ) {
+        var ovlyData = ovlyData
+
+        val imageFrameOrigin = attrs.getInt(Tag.ImageFrameOrigin or gg0000, 1)
+        val framesInOverlay = attrs.getInt(Tag.NumberOfFramesInOverlay or gg0000, 1)
+        val ovlyFrameIndex = frameIndex - imageFrameOrigin + 1
+        if (ovlyFrameIndex < 0 || ovlyFrameIndex >= framesInOverlay)
+            return
+
+        val tagOverlayRows = Tag.OverlayRows or gg0000
+        val tagOverlayColumns = Tag.OverlayColumns or gg0000
+        val tagOverlayData = Tag.OverlayData or gg0000
+        val tagOverlayOrigin = Tag.OverlayOrigin or gg0000
+
+        val ovlyRows = attrs.getInt(tagOverlayRows, -1)
+        val ovlyColumns = attrs.getInt(tagOverlayColumns, -1)
+        val ovlyOrigin = attrs.getInts(tagOverlayOrigin)
+        if (ovlyData == null)
+            ovlyData = attrs.getSafeBytes(tagOverlayData)
+
+        if (ovlyData == null)
+            throw IllegalArgumentException(
+                "Missing "
+                        + TagUtils.toString(tagOverlayData)
+                        + " Overlay Data"
+            )
+        if (ovlyRows <= 0)
+            throw IllegalArgumentException(
+                TagUtils.toString(tagOverlayRows)
+                        + " Overlay Rows [" + ovlyRows + "]"
+            )
+        if (ovlyColumns <= 0)
+            throw IllegalArgumentException(
+                TagUtils.toString(tagOverlayColumns)
+                        + " Overlay Columns [" + ovlyColumns + "]"
+            )
+        if (ovlyOrigin == null)
+            throw IllegalArgumentException(
+                "Missing "
+                        + TagUtils.toString(tagOverlayOrigin)
+                        + " Overlay Origin"
+            )
+        if (ovlyOrigin.size != 2)
+            throw IllegalArgumentException(
+                TagUtils.toString(tagOverlayOrigin)
+                        + " Overlay Origin " + Arrays.toString(ovlyOrigin)
+            )
+
+        val x0 = ovlyOrigin[1] - 1
+        val y0 = ovlyOrigin[0] - 1
+
+        val ovlyLen = ovlyRows * ovlyColumns
+        val ovlyOff = ovlyLen * ovlyFrameIndex
+        var i = ovlyOff.ushr(3)
+        val end = (ovlyOff + ovlyLen + 7).ushr(3)
+        while (i < end) {
+            val ovlyBits = ovlyData[i].toInt() and 0xff
+            var j = 0
+            while (ovlyBits.ushr(j) != 0) {
+                if (ovlyBits and (1 shl j) == 0) {
+                    j++
+                    continue
+                }
+
+                val ovlyIndex = (i shl 3) + j - ovlyOff
+                if (ovlyIndex >= ovlyLen) {
+                    j++
+                    continue
+                }
+
+                val y = y0 + ovlyIndex / ovlyColumns
+                val x = x0 + ovlyIndex % ovlyColumns
+                try {
+                    writer.setArgb(x, y, pixelValue)
+                } catch (ignore: ArrayIndexOutOfBoundsException) {
+                }
+                j++
+            }
+            i++
+        }
     }
 
     fun process(srcRaster: Raster, destRaster: WritableRaster?, frameIndex: Int): WritableRaster {
@@ -148,8 +302,10 @@ class DicomImageProcessor(private val metadata: DicomMetaData) {
         return ovlyData
     }
 
-    private fun applyOverlay(gg0000: Int, raster: WritableRaster,
-                             frameIndex: Int, outBits: Int, ovlyData: ByteArray?) {
+    private fun applyOverlay(
+        gg0000: Int, raster: WritableRaster,
+        frameIndex: Int, outBits: Int, ovlyData: ByteArray?
+    ) {
         var ovlyAttrs = metadata.attributes
         val grayscaleValue: Int
         val psAttrs = presentationState
@@ -159,12 +315,16 @@ class DicomImageProcessor(private val metadata: DicomMetaData) {
             grayscaleValue = Overlays.getRecommendedDisplayGrayscaleValue(psAttrs, gg0000)
         } else
             grayscaleValue = overlayGrayScaleValue
-        Overlays.applyOverlay(if (ovlyData != null) 0 else frameIndex, raster,
-                ovlyAttrs, gg0000, grayscaleValue.ushr(16 - outBits), ovlyData)
+        Overlays.applyOverlay(
+            if (ovlyData != null) 0 else frameIndex, raster,
+            ovlyAttrs, gg0000, grayscaleValue.ushr(16 - outBits), ovlyData
+        )
     }
 
-    private fun applyLUTs(raster: Raster, dest: WritableRaster?,
-                          frameIndex: Int, sm: SampleModel, outBits: Int): WritableRaster {
+    private fun applyLUTs(
+        raster: Raster, dest: WritableRaster?,
+        frameIndex: Int, sm: SampleModel, outBits: Int
+    ): WritableRaster {
         val destRaster = if (sm.dataType == dest?.sampleModel?.dataType)
             dest
         else
@@ -174,25 +334,33 @@ class DicomImageProcessor(private val metadata: DicomMetaData) {
         val lutParam = lutFactory
         if (psAttrs != null) {
             lutParam.setModalityLUT(psAttrs)
-            lutParam.setVOI(selectVOILUT(psAttrs, imgAttrs.getString(Tag.SOPInstanceUID), frameIndex + 1),
-                    0, 0, false)
+            lutParam.setVOI(
+                selectVOILUT(psAttrs, imgAttrs.getString(Tag.SOPInstanceUID), frameIndex + 1),
+                0, 0, false
+            )
             lutParam.setPresentationLUT(psAttrs)
         } else {
             val sharedFctGroups = imgAttrs.getNestedDataset(
-                    Tag.SharedFunctionalGroupsSequence)
+                Tag.SharedFunctionalGroupsSequence
+            )
             val frameFctGroups = imgAttrs.getNestedDataset(
-                    Tag.PerFrameFunctionalGroupsSequence, frameIndex)
+                Tag.PerFrameFunctionalGroupsSequence, frameIndex
+            )
             lutParam.setModalityLUT(
-                    selectFctGroup(imgAttrs, sharedFctGroups, frameFctGroups,
-                            Tag.PixelValueTransformationSequence))
+                selectFctGroup(
+                    imgAttrs, sharedFctGroups, frameFctGroups,
+                    Tag.PixelValueTransformationSequence
+                )
+            )
             val ww = windowWidth
             val wc = windowCenter
             if (ww == null || ww == 0.0f) {
                 lutParam.setVOI(
-                        selectFctGroup(imgAttrs, sharedFctGroups, frameFctGroups, Tag.FrameVOILUTSequence),
-                        windowIndex,
-                        voiLUTIndex,
-                        isPreferWindow)
+                    selectFctGroup(imgAttrs, sharedFctGroups, frameFctGroups, Tag.FrameVOILUTSequence),
+                    windowIndex,
+                    voiLUTIndex,
+                    isPreferWindow
+                )
             }
             if (ww == null || wc == null) {
                 lutParam.autoWindowing(imgAttrs, raster)
@@ -211,10 +379,12 @@ class DicomImageProcessor(private val metadata: DicomMetaData) {
         return destRaster
     }
 
-    private fun selectFctGroup(imgAttrs: Attributes,
-                               sharedFctGroups: Attributes?,
-                               frameFctGroups: Attributes?,
-                               tag: Int): Attributes {
+    private fun selectFctGroup(
+        imgAttrs: Attributes,
+        sharedFctGroups: Attributes?,
+        frameFctGroups: Attributes?,
+        tag: Int
+    ): Attributes {
         if (frameFctGroups == null) {
             return imgAttrs
         }

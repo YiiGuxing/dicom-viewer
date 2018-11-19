@@ -7,9 +7,7 @@ group 'cn.yiiguxing.dicom'
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
     compile group: 'javax.vecmath', name: 'vecmath', version: '1.5.2'
-    compile(group: 'org.dcm4che', name: 'dcm4che-imageio', version: '5.14.0') {
-        exclude module: 'log4j'
-    }
+    compile group: 'org.dcm4che', name: 'dcm4che-imageio', version: '5.14.0'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 
