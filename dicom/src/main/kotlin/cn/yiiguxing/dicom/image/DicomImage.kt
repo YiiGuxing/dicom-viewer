@@ -1,5 +1,11 @@
 package cn.yiiguxing.dicom.image
 
+import cn.yiiguxing.dicom.getValue
+import cn.yiiguxing.dicom.setValue
+import javafx.beans.property.BooleanProperty
+import javafx.beans.property.ReadOnlyFloatProperty
+import javafx.beans.property.ReadOnlyFloatWrapper
+import javafx.beans.property.SimpleBooleanProperty
 import javafx.scene.canvas.GraphicsContext
 import javafx.scene.image.PixelFormat
 import javafx.scene.image.WritableImage
@@ -27,9 +33,24 @@ class DicomImage(
     private val defaultWindowWidth: Float
     private val defaultWindowCenter: Float
 
-    val windowWidth get() = processor.windowWidth ?: defaultWindowWidth
-    val windowCenter get() = processor.windowCenter ?: defaultWindowCenter
-    val inverse get() = processor.inverse
+    private val _windowWidthProperty: ReadOnlyFloatWrapper
+    private val _windowCenterProperty: ReadOnlyFloatWrapper
+
+    val windowWidthProperty: ReadOnlyFloatProperty
+    val windowCenterProperty: ReadOnlyFloatProperty
+
+    val windowWidth get() = windowWidthProperty.get()
+    val windowCenter get() = windowCenterProperty.get()
+
+    val inverseProperty: BooleanProperty = object : SimpleBooleanProperty(this, "inverse", false) {
+        override fun invalidated() {
+            updateImage()
+        }
+    }
+    var inverse: Boolean by inverseProperty
+
+    private var updateLazy = false
+    private var changed = false
 
     val orientation: DoubleArray? = metadata.attributes.getDoubles(Tag.ImageOrientationPatient)
 
@@ -38,6 +59,11 @@ class DicomImage(
         defaultWindowWidth = ww
         defaultWindowCenter = wc
         displayImage = createDisplayImage(ww, wc)
+
+        _windowWidthProperty = ReadOnlyFloatWrapper(this, "windowWidth", ww)
+        _windowCenterProperty = ReadOnlyFloatWrapper(this, "windowCenter", wc)
+        windowWidthProperty = _windowWidthProperty.readOnlyProperty
+        windowCenterProperty = _windowCenterProperty.readOnlyProperty
     }
 
     private fun createDisplayImage(ww: Float, wc: Float): WritableImage {
@@ -75,28 +101,43 @@ class DicomImage(
         return image
     }
 
-    fun updateImage(
-        windowWidth: Float = this.windowWidth,
-        windowCenter: Float = this.windowCenter,
-        inverse: Boolean = this.inverse
-    ) {
+    fun setColorWindowing(windowWidth: Float = this.windowWidth, windowCenter: Float = this.windowCenter) {
         if (colorModel.numComponents == 3) {
             return
         }
         val ww = maxOf(windowWidth, 1.0f)
-        if (ww == this.windowWidth && windowCenter == this.windowCenter && inverse == processor.inverse) {
+        if (ww == this.windowWidth && windowCenter == this.windowCenter) {
             return
         }
 
-        val processor = processor
-        processor.windowWidth = ww
-        processor.windowCenter = windowCenter
-        processor.inverse = inverse
-        processor.process(sourceRaster, displayImage.pixelWriter, frame, buffer)
+        _windowWidthProperty.value = ww
+        _windowCenterProperty.value = windowCenter
+        updateImage()
     }
 
     fun resetImage() {
-        updateImage(defaultWindowWidth, defaultWindowCenter, false)
+        updateLazy = true
+        inverse = false
+        setColorWindowing(defaultWindowWidth, defaultWindowCenter)
+        updateLazy = false
+        if (changed) {
+            updateImage()
+        }
+    }
+
+    private fun updateImage() {
+        if (updateLazy) {
+            changed = true
+            return
+        }
+
+        changed = false
+
+        val processor = processor
+        processor.windowWidth = windowWidth
+        processor.windowCenter = windowCenter
+        processor.inverse = inverse
+        processor.process(sourceRaster, displayImage.pixelWriter, frame, buffer)
     }
 
     fun draw(g: Graphics2D, xform: AffineTransform? = null) {

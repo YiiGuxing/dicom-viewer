@@ -3,10 +3,10 @@
 package cn.yiiguxing.dicom.graphics
 
 import cn.yiiguxing.dicom.BodyOrientation
+import cn.yiiguxing.dicom.DicomImageLoader
 import cn.yiiguxing.dicom.graphics.text.GraphicLabel
 import cn.yiiguxing.dicom.graphics.text.TextAlignment
 import cn.yiiguxing.dicom.image.DicomImage
-import cn.yiiguxing.dicom.DicomImageLoader
 import cn.yiiguxing.dicom.opposites
 import cn.yiiguxing.dicom.toLabel
 import org.dcm4che3.data.Tag
@@ -86,7 +86,8 @@ class DicomImageViewModel(
 
     override fun setColorWindow(windowWidth: Float, windowCenter: Float, invert: Boolean) {
         dicomImage?.let { img ->
-            img.updateImage(windowWidth, windowCenter, invert)
+            img.setColorWindowing(windowWidth, windowCenter)
+            img.inverse = invert
             updateViewportAnnotation()
             invalidateSelf()
         }

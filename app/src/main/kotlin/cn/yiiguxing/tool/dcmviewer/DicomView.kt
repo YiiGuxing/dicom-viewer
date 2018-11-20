@@ -1,11 +1,12 @@
 package cn.yiiguxing.tool.dcmviewer
 
-import javafx.fxml.FXML
+import cn.yiiguxing.dicom.getValue
+import cn.yiiguxing.dicom.image.DicomImage
+import cn.yiiguxing.dicom.setValue
+import javafx.beans.property.*
 import javafx.fxml.FXMLLoader
-import javafx.scene.canvas.Canvas
-import javafx.scene.control.Label
 import javafx.scene.layout.AnchorPane
-import javafx.scene.paint.Color
+import javafx.util.Callback
 
 
 /**
@@ -15,47 +16,56 @@ import javafx.scene.paint.Color
  */
 class DicomView : AnchorPane() {
 
-    @FXML
-    private lateinit var canvas: Canvas
-    @FXML
-    private lateinit var leftTopAnnotation: Label
-    @FXML
-    private lateinit var rightTopAnnotation: Label
-    @FXML
-    private lateinit var leftBottomAnnotation: Label
-    @FXML
-    private lateinit var rightBottomAnnotation: Label
-    @FXML
-    private lateinit var leftOrientation: Label
-    @FXML
-    private lateinit var topOrientation: Label
-    @FXML
-    private lateinit var rightOrientation: Label
-    @FXML
-    private lateinit var bottomOrientation: Label
+    val dicomImagePriority: ObjectProperty<DicomImage?> = DicomImagePriority()
+    var dicomImage: DicomImage? by dicomImagePriority
+
+    private val _windowWidthProperty = ReadOnlyObjectWrapper<Float?>(this, "windowWidth", null)
+    private val _windowCenterProperty = ReadOnlyObjectWrapper<Float?>(this, "windowCenter", null)
+
+    val windowWidthProperty: ReadOnlyObjectProperty<Float?> = _windowWidthProperty.readOnlyProperty
+    val windowWidth: Float? get() = windowWidthProperty.value
+
+    val windowCenterProperty: ReadOnlyObjectProperty<Float?> = _windowCenterProperty.readOnlyProperty
+    val windowCenter: Float? get() = windowCenterProperty.value
+
+    val inverseProperty: BooleanProperty = SimpleBooleanProperty(this, "inverse", false)
 
     init {
         val loader = FXMLLoader(javaClass.getResource("/DicomView.fxml"))
         loader.setRoot(this)
-        loader.setController(this)
+        loader.controllerFactory = Callback { DicomViewController(this) }
         loader.load<AnchorPane>()
-
-        canvas.widthProperty().bind(widthProperty())
-        canvas.heightProperty().bind(heightProperty())
-
-        canvas.widthProperty().addListener { _, _, _ ->
-            drawContent()
-        }
-        canvas.heightProperty().addListener { _, _, _ ->
-            drawContent()
-        }
     }
 
-    private fun drawContent() {
-        val gc = canvas.graphicsContext2D
-        gc.clearRect(0.0, 0.0, width, height)
-        gc.fill = Color.RED
-        gc.fillRect(0.0, 0.0, width - 2, height - 2)
+    private inner class DicomImagePriority : ObjectPropertyBase<DicomImage?>() {
+        private var previousValue: DicomImage? = null
+
+        override fun getName(): String = "dicomImage"
+        override fun getBean(): Any = this@DicomView
+
+        override fun set(newValue: DicomImage?) {
+            previousValue = value
+            super.set(newValue)
+        }
+
+        override fun invalidated() {
+            val value = value
+            if (value != null) {
+                _windowWidthProperty.bind(value.windowWidthProperty.asObject())
+                _windowCenterProperty.bind(value.windowCenterProperty.asObject())
+                inverseProperty.bindBidirectional(value.inverseProperty)
+            } else {
+                _windowWidthProperty.let { p ->
+                    p.unbind()
+                    p.value = null
+                }
+                _windowCenterProperty.let { p ->
+                    p.unbind()
+                    p.value = null
+                }
+                previousValue?.let { inverseProperty.unbindBidirectional(it.inverseProperty) }
+            }
+        }
     }
 
 }

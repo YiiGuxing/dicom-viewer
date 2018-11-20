@@ -11,7 +11,6 @@ import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.canvas.Canvas
 import javafx.scene.effect.BoxBlur
-import javafx.scene.layout.StackPane
 import javafx.scene.paint.Color
 import javafx.stage.Stage
 
@@ -39,10 +38,10 @@ class App : Application() {
         canvas.height = 512.0
 
         //gc.rotate(30.0)
-        image.updateImage(2023f, 70f)
+        image.setColorWindowing(2023f, 70f)
         image.draw(gc)
 
-        primaryStage.scene = Scene(StackPane(canvas), 512.0, 512.0)
+        primaryStage.scene = Scene(DicomView(), 512.0, 512.0)
         primaryStage.show()
     }
 }
