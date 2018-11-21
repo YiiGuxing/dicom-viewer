@@ -16,6 +16,8 @@ import javafx.util.Callback
  */
 class DicomView : AnchorPane() {
 
+    private val controller: DicomViewController
+
     val dicomImagePriority: ObjectProperty<DicomImage?> = DicomImagePriority()
     var dicomImage: DicomImage? by dicomImagePriority
 
@@ -29,12 +31,77 @@ class DicomView : AnchorPane() {
     val windowCenter: Float? get() = windowCenterProperty.value
 
     val inverseProperty: BooleanProperty = SimpleBooleanProperty(this, "inverse", false)
+    var inverse: Boolean by inverseProperty
+
+    private val _isActualSizeProperty = ReadOnlyBooleanWrapper(this, "isActualSize", false)
+    private val _isCanZoomInProperty = ReadOnlyBooleanWrapper(this, "isCanZoomIn", false)
+    private val _isCanZoomOutProperty = ReadOnlyBooleanWrapper(this, "isCanZoomOut", false)
+
+    val isActualSizeProperty: ReadOnlyBooleanProperty = _isActualSizeProperty.readOnlyProperty
+    val isActualSize: Boolean get() = isActualSizeProperty.get()
+
+    val isCanZoomInProperty: ReadOnlyBooleanProperty = _isCanZoomInProperty.readOnlyProperty
+    val isCanZoomIn: Boolean get() = isCanZoomInProperty.get()
+
+    val isCanZoomOutProperty: ReadOnlyBooleanProperty = _isCanZoomOutProperty.readOnlyProperty
+    val isCanZoomOut: Boolean get() = isCanZoomOutProperty.get()
 
     init {
         val loader = FXMLLoader(javaClass.getResource("/DicomView.fxml"))
         loader.setRoot(this)
         loader.controllerFactory = Callback { DicomViewController(this) }
         loader.load<AnchorPane>()
+        controller = loader.getController()
+    }
+
+    fun setColorWindowing(windowWidth: Float, windowCenter: Float) {
+        dicomImage?.setColorWindowing(windowWidth, windowCenter)
+    }
+
+    fun invert() {
+        inverse = !inverse
+    }
+
+    fun locate() {
+
+    }
+
+    fun zoomIn() {
+        if (isCanZoomIn) {
+
+        }
+    }
+
+    fun zoomOut() {
+        if (isCanZoomOut) {
+
+        }
+    }
+
+    fun zoomToActualSize() {
+        if (!isActualSize) {
+
+        }
+    }
+
+    fun clockwiseRotate() {
+        //rotate(90.0)
+    }
+
+    fun counterclockwiseRotate() {
+        //rotate(-90.0)
+    }
+
+    fun horizontalFlip() {
+
+    }
+
+    fun verticalFlip() {
+
+    }
+
+    fun reset() {
+        dicomImage?.resetImage()
     }
 
     private inner class DicomImagePriority : ObjectPropertyBase<DicomImage?>() {

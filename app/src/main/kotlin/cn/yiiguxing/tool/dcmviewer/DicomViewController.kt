@@ -41,6 +41,7 @@ internal class DicomViewController(private val view: DicomView) {
 
         changeHandler.apply {
             registerChangeListener(view.dicomImagePriority, REF_IMAGE)
+            registerChangeListener(view.inverseProperty, REF_INVERSE)
             registerChangeListener(view.widthProperty(), REF_SIZE)
             registerChangeListener(view.heightProperty(), REF_SIZE)
         }
@@ -67,6 +68,7 @@ internal class DicomViewController(private val view: DicomView) {
 
     companion object {
         private const val REF_IMAGE = "IMAGE"
+        private const val REF_INVERSE = "INVERSE"
         private const val REF_SIZE = "SIZE"
     }
 }
