@@ -91,6 +91,7 @@ class DicomImageIO : Closeable {
     private var frameLength: Int = 0
 
     private var pmi: PhotometricInterpretation? = null
+    private var pmiAfterDecompression: PhotometricInterpretation? = null
     private var imageDescriptor: ImageDescriptor? = null
 
     /**
@@ -269,7 +270,7 @@ class DicomImageIO : Closeable {
                     LOG.debug("Start decompressing frame #" + (frameIndex + 1))
                 }
                 val pmi = requireNotNull(pmi) { "pmi was null." }
-                val raster = if (pmi.decompress() === pmi && decompressor.canReadRaster()) {
+                val raster = if (pmiAfterDecompression === pmi && decompressor.canReadRaster()) {
                     decompressor.readRaster(0, decompressParam())
                 } else {
                     decompressor.read(0, decompressParam()).raster
@@ -500,6 +501,7 @@ class DicomImageIO : Closeable {
             pmi = PhotometricInterpretation.fromString(
                     ds.getString(Tag.PhotometricInterpretation, "MONOCHROME2"))
             if (pixelDataLength != -1) {
+                pmiAfterDecompression = pmi
                 this.frameLength = pmi!!.frameLength(width, height, samples, bitsAllocated)
             } else {
                 val fmi = metadata.fileMetaInformation
@@ -508,6 +510,7 @@ class DicomImageIO : Closeable {
                 val tsuid = fmi.getString(Tag.TransferSyntaxUID)
                 val param = ImageReaderFactory.getImageReaderParam(tsuid)
                         ?: throw UnsupportedOperationException("Unsupported Transfer Syntax: $tsuid")
+                pmiAfterDecompression = param.pmiAfterDecompression(pmi)
                 this.rle = tsuid == UID.RLELossless
                 this.decompressor = ImageReaderFactory.getImageReader(param)
                 LOG.debug("Decompressor: {}", decompressor!!.javaClass.name)
