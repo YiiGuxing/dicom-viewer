@@ -33,18 +33,18 @@ class DicomView : AnchorPane() {
     val inverseProperty: BooleanProperty = SimpleBooleanProperty(this, "inverse", false)
     var inverse: Boolean by inverseProperty
 
-    private val _isActualSizeProperty = ReadOnlyBooleanWrapper(this, "isActualSize", false)
-    private val _isCanZoomInProperty = ReadOnlyBooleanWrapper(this, "isCanZoomIn", false)
-    private val _isCanZoomOutProperty = ReadOnlyBooleanWrapper(this, "isCanZoomOut", false)
+    private val _actualSizeProperty = ReadOnlyBooleanWrapper(this, "isActualSize", false)
+    private val _canZoomInProperty = ReadOnlyBooleanWrapper(this, "canZoomIn", false)
+    private val _canZoomOutProperty = ReadOnlyBooleanWrapper(this, "canZoomOut", false)
 
-    val isActualSizeProperty: ReadOnlyBooleanProperty = _isActualSizeProperty.readOnlyProperty
-    val isActualSize: Boolean get() = isActualSizeProperty.get()
+    val actualSizeProperty: ReadOnlyBooleanProperty = _actualSizeProperty.readOnlyProperty
+    val isActualSize: Boolean get() = actualSizeProperty.get()
 
-    val isCanZoomInProperty: ReadOnlyBooleanProperty = _isCanZoomInProperty.readOnlyProperty
-    val isCanZoomIn: Boolean get() = isCanZoomInProperty.get()
+    val canZoomInProperty: ReadOnlyBooleanProperty = _canZoomInProperty.readOnlyProperty
+    val isCanZoomIn: Boolean get() = canZoomInProperty.get()
 
-    val isCanZoomOutProperty: ReadOnlyBooleanProperty = _isCanZoomOutProperty.readOnlyProperty
-    val isCanZoomOut: Boolean get() = isCanZoomOutProperty.get()
+    val canZoomOutProperty: ReadOnlyBooleanProperty = _canZoomOutProperty.readOnlyProperty
+    val isCanZoomOut: Boolean get() = canZoomOutProperty.get()
 
     init {
         val loader = FXMLLoader(javaClass.getResource("/DicomView.fxml"))
@@ -52,6 +52,10 @@ class DicomView : AnchorPane() {
         loader.controllerFactory = Callback { DicomViewController(this) }
         loader.load<AnchorPane>()
         controller = loader.getController()
+
+        _actualSizeProperty.bind(controller.actualSizeProperty)
+        _canZoomInProperty.bind(controller.canZoomInProperty)
+        _canZoomOutProperty.bind(controller.canZoomOutProperty)
     }
 
     fun setColorWindowing(windowWidth: Float, windowCenter: Float) {
@@ -63,45 +67,45 @@ class DicomView : AnchorPane() {
     }
 
     fun locate() {
-
+        controller.locate()
     }
 
     fun zoomIn() {
         if (isCanZoomIn) {
-
+            controller.scale(2.0)
         }
     }
 
     fun zoomOut() {
         if (isCanZoomOut) {
-
+            controller.scale(0.5)
         }
     }
 
     fun zoomToActualSize() {
         if (!isActualSize) {
-
+            controller.scaleToActualSize()
         }
     }
 
     fun clockwiseRotate() {
-        //rotate(90.0)
+        controller.rotate(Math.toRadians(90.0))
     }
 
     fun counterclockwiseRotate() {
-        //rotate(-90.0)
+        controller.rotate(Math.toRadians(-90.0))
     }
 
     fun horizontalFlip() {
-
+        controller.horizontalFlip()
     }
 
     fun verticalFlip() {
-
+        controller.verticalFlip()
     }
 
     fun reset() {
-        dicomImage?.resetImage()
+        controller.reset()
     }
 
     private inner class DicomImagePriority : ObjectPropertyBase<DicomImage?>() {
