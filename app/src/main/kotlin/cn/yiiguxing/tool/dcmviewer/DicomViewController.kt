@@ -1,16 +1,18 @@
 package cn.yiiguxing.tool.dcmviewer
 
+import cn.yiiguxing.dicom.BodyOrientation
+import cn.yiiguxing.dicom.opposites
+import cn.yiiguxing.dicom.toLabel
 import com.sun.javafx.scene.control.MultiplePropertyChangeListenerHandler
 import javafx.beans.property.BooleanProperty
-import javafx.beans.property.ReadOnlyBooleanProperty
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.fxml.FXML
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Label
-import javafx.scene.paint.Color
+import javafx.scene.effect.BoxBlur
 import javafx.scene.transform.Affine
 import javafx.scene.transform.TransformChangedEvent
-import java.awt.geom.AffineTransform
+import javax.vecmath.Vector3d
 
 /**
  * DicomViewController
@@ -58,15 +60,30 @@ internal class DicomViewController(private val view: DicomView) {
 
     @FXML
     private fun initialize() {
+        interceptDrawing = true
         bindVisible()
         registerChangeListener()
-
-        canvas.widthProperty().bind(view.widthProperty())
-        canvas.heightProperty().bind(view.heightProperty())
+        initCanvas()
 
         transform.addEventHandler(TransformChangedEvent.ANY) {
             drawContent()
         }
+
+        interceptDrawing = false
+        drawContent()
+    }
+
+    private fun initCanvas() {
+        // FIXME ANTI-ALIASING: Is there a better implementation?
+        val blur = BoxBlur().apply {
+            width = 1.0
+            height = 1.0
+            iterations = 1
+        }
+        canvas.graphicsContext2D.setEffect(blur)
+
+        canvas.widthProperty().bind(view.widthProperty())
+        canvas.heightProperty().bind(view.heightProperty())
     }
 
     private fun bindVisible() {
@@ -82,10 +99,12 @@ internal class DicomViewController(private val view: DicomView) {
     }
 
     private fun registerChangeListener() = with(changeHandler) {
-        registerChangeListener(view.dicomImagePriority, REF_IMAGE)
-        registerChangeListener(view.inverseProperty, REF_INVERSE)
         registerChangeListener(view.widthProperty(), REF_SIZE)
         registerChangeListener(view.heightProperty(), REF_SIZE)
+        registerChangeListener(view.dicomImagePriority, REF_IMAGE)
+        registerChangeListener(view.windowWidthProperty, REF_COLOR_WINDOWING)
+        registerChangeListener(view.windowCenterProperty, REF_COLOR_WINDOWING)
+        registerChangeListener(view.inverseProperty, REF_COLOR_WINDOWING)
     }
 
     fun translate(dx: Double, dy: Double) {
@@ -114,25 +133,100 @@ internal class DicomViewController(private val view: DicomView) {
         val cy = height / 2.0
         rotationRadian = (rotationRadian + radian) % (2.0 * Math.PI)
         transform.appendRotation(radian, cx, cy)
+        updateOrientation()
     }
 
     fun horizontalFlip() {
+        val cx = width / 2.0
+        val cy = height / 2.0
+        val rotation = rotationRadian
 
+        interceptDrawing = true
+        transform.apply {
+            if (rotation != 0.0) {
+                appendRotation(2.0 * (Math.PI - rotation), cx, cy)
+            }
+            appendScale(-1.0, 1.0, cx, cy)
+        }
+        interceptDrawing = false
+
+        isHorizontalFlip = !isHorizontalFlip
+        drawContent()
+        updateOrientation()
     }
 
     fun verticalFlip() {
+        val cx = width / 2.0
+        val cy = height / 2.0
+        val rotation = rotationRadian
 
+        interceptDrawing = true
+        transform.apply {
+            if (rotation != 0.0) {
+                appendRotation(-2.0 * rotation, cx, cy)
+            }
+            appendScale(1.0, -1.0, cx, cy)
+        }
+        interceptDrawing = false
+
+        isVerticalFlip = !isVerticalFlip
+        drawContent()
+        updateOrientation()
     }
 
     fun reset() {
+        interceptDrawing = true
+        rotationRadian = 0.0
+        isHorizontalFlip = false
+        isVerticalFlip = false
+        transform.setToIdentity()
+        view.dicomImage?.resetImage()
+        interceptDrawing = false
 
+        drawContent()
+        updateOrientation()
+    }
+
+    private fun updateOrientation() {
+        val image = view.dicomImage ?: return
+        val orientation = image.orientation ?: return
+
+        // Set the opposite vector direction (otherwise label should be placed in mid-right and mid-bottom
+        val vr = Vector3d(-orientation[0], -orientation[1], -orientation[2])
+        val vc = Vector3d(-orientation[3], -orientation[4], -orientation[5])
+
+        val rotation = rotationRadian
+        if (rotation != 0.0) {
+            val vn = BodyOrientation.computeNormalVector(orientation)
+            BodyOrientation.rotate(vr, vn, -rotation, vr)
+            BodyOrientation.rotate(vc, vn, -rotation, vc)
+        }
+        if (isHorizontalFlip) {
+            vr.x = -vr.x
+            vr.y = -vr.y
+            vr.z = -vr.z
+        }
+        if (isVerticalFlip) {
+            vc.x = -vc.x
+            vc.y = -vc.y
+            vc.z = -vc.z
+        }
+
+        val left = BodyOrientation.getBodyOrientations(vr, 0.0005)
+        val top = BodyOrientation.getBodyOrientations(vc, 0.0005)
+        leftOrientation.text = left.toLabel()
+        topOrientation.text = top.toLabel()
+        rightOrientation.text = left.opposites().toLabel()
+        bottomOrientation.text = top.opposites().toLabel()
     }
 
     private fun handlePropertyChanged(reference: String) {
+        interceptDrawing = true
         when (reference) {
             REF_SIZE -> onSizeChanged()
         }
 
+        interceptDrawing = false
         drawContent()
     }
 
@@ -163,20 +257,19 @@ internal class DicomViewController(private val view: DicomView) {
             return
         }
 
+        val image = view.dicomImage ?: return
         val gc = canvas.graphicsContext2D
-        gc.clearRect(0.0, 0.0, canvas.width, canvas.height)
-
+        gc.clearRect(0.0, 0.0, width, height)
         gc.save()
-
-        gc.fill = Color.RED
-        gc.fillRect(0.0, 0.0, canvas.width - 2, canvas.height - 2)
-
+        gc.transform(transform)
+        gc.transform(imageTransform)
+        image.draw(gc)
         gc.restore()
     }
 
     companion object {
         private const val REF_IMAGE = "IMAGE"
-        private const val REF_INVERSE = "INVERSE"
+        private const val REF_COLOR_WINDOWING = "COLOR_WINDOWING"
         private const val REF_SIZE = "SIZE"
     }
 }
