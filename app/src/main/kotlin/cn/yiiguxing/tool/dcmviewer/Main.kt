@@ -9,9 +9,6 @@ package cn.yiiguxing.tool.dcmviewer
 import cn.yiiguxing.dicom.image.DicomImageIO
 import javafx.application.Application
 import javafx.scene.Scene
-import javafx.scene.canvas.Canvas
-import javafx.scene.effect.BoxBlur
-import javafx.scene.paint.Color
 import javafx.stage.Stage
 
 
@@ -22,26 +19,9 @@ class App : Application() {
             read(0)
         }
 
-        val canvas = Canvas()
-        val gc = canvas.graphicsContext2D
-
-        // FIXME ANTI-ALIASING: Is there a better implementation?
-        val blur = BoxBlur()
-        blur.width = 1.0
-        blur.height = 1.0
-        blur.iterations = 1
-        gc.setEffect(blur)
-
-        gc.fill = Color.RED
-        gc.fillRect(0.0, 0.0, 512.0, 512.0)
-        canvas.width = 512.0
-        canvas.height = 512.0
-
-        //gc.rotate(30.0)
-        image.setColorWindowing(2023f, 70f)
-        image.draw(gc)
-
-        primaryStage.scene = Scene(DicomView(), 512.0, 512.0)
+        val dicomView = DicomView()
+        dicomView.dicomImage = image
+        primaryStage.scene = Scene(dicomView, 512.0, 512.0)
         primaryStage.show()
     }
 }
