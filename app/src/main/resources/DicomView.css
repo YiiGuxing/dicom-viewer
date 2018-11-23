@@ -1,3 +1,4 @@
 .label {
+    -fx-text-fill: white;
     -fx-padding: 10;
 }
