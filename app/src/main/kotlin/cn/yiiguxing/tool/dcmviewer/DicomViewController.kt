@@ -12,6 +12,8 @@ import javafx.scene.control.Label
 import javafx.scene.effect.BoxBlur
 import javafx.scene.transform.Affine
 import javafx.scene.transform.TransformChangedEvent
+import org.dcm4che3.data.Tag
+import java.text.SimpleDateFormat
 import javax.vecmath.Vector3d
 
 /**
@@ -46,11 +48,11 @@ internal class DicomViewController(private val view: DicomView) {
     private val transform: Affine = Affine()
     private val imageTransform: Affine = Affine()
 
-    private var rotationRadian: Double = 0.0
+    private var rotationAngle: Double = 0.0
     private var isHorizontalFlip: Boolean = false
     private var isVerticalFlip: Boolean = false
 
-    private var interceptDrawing = false
+    private var drawInterceptSignal = 0
 
     internal val actualSizeProperty: BooleanProperty = SimpleBooleanProperty(false)
     internal val canZoomInProperty: BooleanProperty = SimpleBooleanProperty(false)
@@ -60,7 +62,7 @@ internal class DicomViewController(private val view: DicomView) {
 
     @FXML
     private fun initialize() {
-        interceptDrawing = true
+        pushDrawInterceptSignal()
         bindVisible()
         registerChangeListener()
         initCanvas()
@@ -69,8 +71,7 @@ internal class DicomViewController(private val view: DicomView) {
             drawContent()
         }
 
-        interceptDrawing = false
-        drawContent()
+        popDrawInterceptSignal()
     }
 
     private fun initCanvas() {
@@ -128,27 +129,27 @@ internal class DicomViewController(private val view: DicomView) {
 
     }
 
-    fun rotate(radian: Double) {
+    fun rotate(angle: Double) {
         val cx = width / 2.0
         val cy = height / 2.0
-        rotationRadian = (rotationRadian + radian) % (2.0 * Math.PI)
-        transform.appendRotation(radian, cx, cy)
+        rotationAngle = (rotationAngle + angle) % 360.0
+        transform.appendRotation(angle, cx, cy)
         updateOrientation()
     }
 
     fun horizontalFlip() {
         val cx = width / 2.0
         val cy = height / 2.0
-        val rotation = rotationRadian
+        val rotation = rotationAngle
 
-        interceptDrawing = true
+        pushDrawInterceptSignal()
         transform.apply {
             if (rotation != 0.0) {
-                appendRotation(2.0 * (Math.PI - rotation), cx, cy)
+                appendRotation(360.0 - 2.0 * rotation, cx, cy)
             }
             appendScale(-1.0, 1.0, cx, cy)
         }
-        interceptDrawing = false
+        popDrawInterceptSignal()
 
         isHorizontalFlip = !isHorizontalFlip
         drawContent()
@@ -158,16 +159,16 @@ internal class DicomViewController(private val view: DicomView) {
     fun verticalFlip() {
         val cx = width / 2.0
         val cy = height / 2.0
-        val rotation = rotationRadian
+        val rotation = rotationAngle
 
-        interceptDrawing = true
+        pushDrawInterceptSignal()
         transform.apply {
             if (rotation != 0.0) {
                 appendRotation(-2.0 * rotation, cx, cy)
             }
             appendScale(1.0, -1.0, cx, cy)
         }
-        interceptDrawing = false
+        popDrawInterceptSignal()
 
         isVerticalFlip = !isVerticalFlip
         drawContent()
@@ -175,13 +176,13 @@ internal class DicomViewController(private val view: DicomView) {
     }
 
     fun reset() {
-        interceptDrawing = true
-        rotationRadian = 0.0
+        pushDrawInterceptSignal()
+        rotationAngle = 0.0
         isHorizontalFlip = false
         isVerticalFlip = false
         transform.setToIdentity()
         view.dicomImage?.resetImage()
-        interceptDrawing = false
+        popDrawInterceptSignal()
 
         drawContent()
         updateOrientation()
@@ -195,7 +196,7 @@ internal class DicomViewController(private val view: DicomView) {
         val vr = Vector3d(-orientation[0], -orientation[1], -orientation[2])
         val vc = Vector3d(-orientation[3], -orientation[4], -orientation[5])
 
-        val rotation = rotationRadian
+        val rotation = rotationAngle
         if (rotation != 0.0) {
             val vn = BodyOrientation.computeNormalVector(orientation)
             BodyOrientation.rotate(vr, vn, -rotation, vr)
@@ -220,14 +221,61 @@ internal class DicomViewController(private val view: DicomView) {
         bottomOrientation.text = top.opposites().toLabel()
     }
 
+    private fun updateViewportAnnotation() {
+    }
+
     private fun handlePropertyChanged(reference: String) {
-        interceptDrawing = true
+        pushDrawInterceptSignal()
         when (reference) {
+            REF_IMAGE -> onImageChanged()
             REF_SIZE -> onSizeChanged()
         }
 
-        interceptDrawing = false
+        popDrawInterceptSignal()
         drawContent()
+    }
+
+    private fun onImageChanged() {
+        val image = view.dicomImage
+        if (image != null) {
+            val attrs = image.metadata.attributes
+
+            val name = attrs.getString(Tag.PatientName) ?: ""
+            val patientInfo = arrayOf(
+                attrs.getString(Tag.PatientSex),
+                attrs.getString(Tag.PatientAge),
+                attrs.getDate(Tag.PatientBirthDate)?.let { DATE_FORMATTER.format(it) }
+            ).joinToString(separator = ",") { it ?: "-" }
+            val seriesNumber = attrs.getInt(Tag.SeriesNumber, -1).takeIf { it >= 0 }?.let { "SN: $it" }
+            val instanceNumber = attrs.getInt(Tag.InstanceNumber, -1).takeIf { it >= 0 }?.let { "IN: $it" }
+            leftTopAnnotation.text = "$name\n$patientInfo\n$seriesNumber\n$instanceNumber"
+
+            rightTopAnnotation.text = arrayOf(
+                attrs.getString(Tag.InstitutionName),
+                attrs.getString(Tag.Manufacturer),
+                attrs.getString(Tag.ManufacturerModelName),
+                attrs.getDate(Tag.ContentDate)?.let { DATE_FORMATTER.format(it) },
+                attrs.getDate(Tag.ContentTime)?.let { TIME_FORMATTER.format(it) }
+            ).joinToString(separator = "\n") { it ?: "" }
+
+            leftBottomAnnotation.text = arrayOf(
+                attrs.getFloat(Tag.KVP, -1.0f).takeIf { it >= 0f }?.let { "${it}kV" },
+                attrs.getInt(Tag.Exposure, -1).takeIf { it >= 0 }?.let { "${it}mAx" },
+                "W:${image.width}/H:${image.height}"
+            ).filterNotNull().joinToString(separator = "\n")
+        } else {
+            leftTopAnnotation.text = null
+            leftBottomAnnotation.text = null
+            rightTopAnnotation.text = null
+            rightBottomAnnotation.text = null
+            leftOrientation.text = null
+            topOrientation.text = null
+            rightOrientation.text = null
+            bottomOrientation.text = null
+        }
+
+        updateImageTransform()
+        reset()
     }
 
     private fun onSizeChanged() {
@@ -252,8 +300,16 @@ internal class DicomViewController(private val view: DicomView) {
         appendScale(scale, scale)
     }
 
+    private fun pushDrawInterceptSignal() {
+        drawInterceptSignal++
+    }
+
+    private fun popDrawInterceptSignal() {
+        drawInterceptSignal--
+    }
+
     private fun drawContent() {
-        if (interceptDrawing || width <= 0 || height <= 0) {
+        if (drawInterceptSignal > 0 || width <= 0 || height <= 0) {
             return
         }
 
@@ -271,5 +327,8 @@ internal class DicomViewController(private val view: DicomView) {
         private const val REF_IMAGE = "IMAGE"
         private const val REF_COLOR_WINDOWING = "COLOR_WINDOWING"
         private const val REF_SIZE = "SIZE"
+
+        private val DATE_FORMATTER = SimpleDateFormat("yyyy/MM/dd")
+        private val TIME_FORMATTER = SimpleDateFormat("HH:mm:ss")
     }
 }
