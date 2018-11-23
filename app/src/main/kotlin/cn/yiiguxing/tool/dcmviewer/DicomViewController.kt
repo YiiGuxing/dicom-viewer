@@ -4,6 +4,7 @@ import cn.yiiguxing.dicom.BodyOrientation
 import cn.yiiguxing.dicom.opposites
 import cn.yiiguxing.dicom.toLabel
 import com.sun.javafx.scene.control.MultiplePropertyChangeListenerHandler
+import javafx.beans.binding.Bindings
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.SimpleBooleanProperty
 import javafx.fxml.FXML
@@ -14,6 +15,7 @@ import javafx.scene.transform.Affine
 import javafx.scene.transform.TransformChangedEvent
 import org.dcm4che3.data.Tag
 import java.text.SimpleDateFormat
+import java.util.concurrent.Callable
 import javax.vecmath.Vector3d
 
 /**
@@ -64,6 +66,7 @@ internal class DicomViewController(private val view: DicomView) {
     private fun initialize() {
         pushDrawInterceptSignal()
         bindVisible()
+        bindViewportAnnotation()
         registerChangeListener()
         initCanvas()
 
@@ -97,6 +100,18 @@ internal class DicomViewController(private val view: DicomView) {
         topOrientation.visibleProperty().bind(hasImage)
         rightOrientation.visibleProperty().bind(hasImage)
         bottomOrientation.visibleProperty().bind(hasImage)
+    }
+
+    private fun bindViewportAnnotation() {
+        val canvasScaleBinding = transform.createScalingFactorBinding()
+        val imageScaleBinding = imageTransform.createScalingFactorBinding()
+        val scaleBinding = Bindings.multiply(canvasScaleBinding, imageScaleBinding).asString("Scale: %.4f\n")
+        val colorWindowingBinding = Bindings.createStringBinding(Callable {
+            val ww = view.windowWidth?.let { Math.round(it) } ?: "-"
+            val wc = view.windowCenter?.let { Math.round(it) } ?: "-"
+            "WW/WC: $ww/$wc"
+        }, view.windowWidthProperty, view.windowCenterProperty)
+        rightBottomAnnotation.textProperty().bind(Bindings.concat(scaleBinding, colorWindowingBinding))
     }
 
     private fun registerChangeListener() = with(changeHandler) {
@@ -221,9 +236,6 @@ internal class DicomViewController(private val view: DicomView) {
         bottomOrientation.text = top.opposites().toLabel()
     }
 
-    private fun updateViewportAnnotation() {
-    }
-
     private fun handlePropertyChanged(reference: String) {
         pushDrawInterceptSignal()
         when (reference) {
@@ -313,9 +325,10 @@ internal class DicomViewController(private val view: DicomView) {
             return
         }
 
-        val image = view.dicomImage ?: return
         val gc = canvas.graphicsContext2D
-        gc.clearRect(0.0, 0.0, width, height)
+        gc.fillRect(0.0, 0.0, width, height)
+
+        val image = view.dicomImage ?: return
         gc.save()
         gc.transform(transform)
         gc.transform(imageTransform)
