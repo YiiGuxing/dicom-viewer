@@ -3,6 +3,7 @@ package cn.yiiguxing.tool.dcmviewer
 import cn.yiiguxing.dicom.getValue
 import cn.yiiguxing.dicom.image.DicomImage
 import cn.yiiguxing.dicom.setValue
+import cn.yiiguxing.tool.dcmviewer.op.Op
 import javafx.beans.property.*
 import javafx.fxml.FXMLLoader
 import javafx.scene.layout.AnchorPane
@@ -46,6 +47,9 @@ class DicomView : AnchorPane() {
     val canZoomOutProperty: ReadOnlyBooleanProperty = _canZoomOutProperty.readOnlyProperty
     val isCanZoomOut: Boolean get() = canZoomOutProperty.get()
 
+    val opProperty: ObjectProperty<Op> = SimpleObjectProperty(this, "op", Op.WINDOWING)
+    var op: Op by opProperty
+
     init {
         val loader = FXMLLoader(javaClass.getResource("/DicomView.fxml"))
         loader.setRoot(this)
@@ -71,21 +75,15 @@ class DicomView : AnchorPane() {
     }
 
     fun zoomIn() {
-        if (isCanZoomIn) {
-            controller.scale(2.0)
-        }
+        controller.zoomIn()
     }
 
     fun zoomOut() {
-        if (isCanZoomOut) {
-            controller.scale(0.5)
-        }
+        controller.zoomOut()
     }
 
     fun zoomToActualSize() {
-        if (!isActualSize) {
-            controller.scaleToActualSize()
-        }
+        controller.scaleToActualSize()
     }
 
     fun clockwiseRotate() {

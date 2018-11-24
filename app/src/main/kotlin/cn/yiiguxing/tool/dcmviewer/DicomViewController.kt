@@ -3,6 +3,7 @@ package cn.yiiguxing.tool.dcmviewer
 import cn.yiiguxing.dicom.BodyOrientation
 import cn.yiiguxing.dicom.opposites
 import cn.yiiguxing.dicom.toLabel
+import cn.yiiguxing.tool.dcmviewer.op.*
 import com.sun.javafx.scene.control.MultiplePropertyChangeListenerHandler
 import javafx.beans.binding.Bindings
 import javafx.beans.property.BooleanProperty
@@ -10,7 +11,8 @@ import javafx.beans.property.SimpleBooleanProperty
 import javafx.fxml.FXML
 import javafx.scene.canvas.Canvas
 import javafx.scene.control.Label
-import javafx.scene.effect.BoxBlur
+import javafx.scene.input.MouseEvent
+import javafx.scene.input.ScrollEvent
 import javafx.scene.transform.Affine
 import javafx.scene.transform.TransformChangedEvent
 import org.dcm4che3.data.Tag
@@ -23,7 +25,7 @@ import javax.vecmath.Vector3d
  *
  * Created by Yii.Guxing on 2018/11/20
  */
-internal class DicomViewController(private val view: DicomView) {
+class DicomViewController(val view: DicomView) {
 
     @FXML
     private lateinit var canvas: Canvas
@@ -44,11 +46,12 @@ internal class DicomViewController(private val view: DicomView) {
     @FXML
     private lateinit var bottomOrientation: Label
 
-    private val width: Double get() = canvas.width
-    private val height: Double get() = canvas.height
+    val viewWidth: Double get() = canvas.width
+    val viewHeight: Double get() = canvas.height
 
-    private val transform: Affine = Affine()
+    internal val transform: Affine = Affine()
     private val imageTransform: Affine = Affine()
+    private val tempTransform: Affine = Affine()
 
     private var rotationAngle: Double = 0.0
     private var isHorizontalFlip: Boolean = false
@@ -62,11 +65,20 @@ internal class DicomViewController(private val view: DicomView) {
 
     private val changeHandler = MultiplePropertyChangeListenerHandler { handlePropertyChanged(it);null }
 
+    private val ops: Array<out MouseOperation> = arrayOf(
+        WindowingOp(this),
+        ScaleOp(this),
+        TranslationOp(this),
+        RotationOp(this)
+    )
+
     @FXML
     private fun initialize() {
         pushDrawInterceptSignal()
         bindVisible()
-        bindViewportAnnotation()
+
+        bindViewport()
+        setupOp()
         registerChangeListener()
         initCanvas()
 
@@ -79,12 +91,13 @@ internal class DicomViewController(private val view: DicomView) {
 
     private fun initCanvas() {
         // FIXME ANTI-ALIASING: Is there a better implementation?
-        val blur = BoxBlur().apply {
-            width = 1.0
-            height = 1.0
-            iterations = 1
-        }
-        canvas.graphicsContext2D.setEffect(blur)
+        // FIXME Crash when zoomed in
+        // val blur = BoxBlur().apply {
+        //     width = 1.0
+        //     height = 1.0
+        //     iterations = 1
+        // }
+        // canvas.graphicsContext2D.setEffect(blur)
 
         canvas.widthProperty().bind(view.widthProperty())
         canvas.heightProperty().bind(view.heightProperty())
@@ -102,16 +115,33 @@ internal class DicomViewController(private val view: DicomView) {
         bottomOrientation.visibleProperty().bind(hasImage)
     }
 
-    private fun bindViewportAnnotation() {
-        val canvasScaleBinding = transform.createScalingFactorBinding()
-        val imageScaleBinding = imageTransform.createScalingFactorBinding()
-        val scaleBinding = Bindings.multiply(canvasScaleBinding, imageScaleBinding).asString("Scale: %.4f\n")
-        val colorWindowingBinding = Bindings.createStringBinding(Callable {
+    private fun bindViewport() {
+        val canvasScale = transform.createScalingFactorBinding()
+        val imageScale = imageTransform.createScalingFactorBinding()
+        val actualScale = canvasScale.multiply(imageScale)
+
+        var nextScale = canvasScale.multiply(ZOOM_IN_STEP)
+        canZoomInProperty.bind(nextScale.lessThanOrEqualTo(MAX_SCALE))
+        nextScale = canvasScale.multiply(ZOOM_OUT_STEP)
+        canZoomOutProperty.bind(nextScale.greaterThanOrEqualTo(MIN_SCALE))
+        actualSizeProperty.bind(actualScale.isEqualTo(1))
+
+        val scaleString = actualScale.asString("Scale: %.4f\n")
+        val colorWindowingString = Bindings.createStringBinding(Callable {
             val ww = view.windowWidth?.let { Math.round(it) } ?: "-"
             val wc = view.windowCenter?.let { Math.round(it) } ?: "-"
             "WW/WC: $ww/$wc"
         }, view.windowWidthProperty, view.windowCenterProperty)
-        rightBottomAnnotation.textProperty().bind(Bindings.concat(scaleBinding, colorWindowingBinding))
+        rightBottomAnnotation.textProperty().bind(Bindings.concat(scaleString, colorWindowingString))
+    }
+
+    private fun setupOp() {
+        canvas.addEventHandler(MouseEvent.ANY, ops[view.op.ordinal])
+        canvas.addEventHandler(ScrollEvent.ANY, ScaleWheelOp(this))
+        view.opProperty.addListener { _, old, new ->
+            canvas.removeEventHandler(MouseEvent.ANY, ops[old.ordinal])
+            canvas.addEventHandler(MouseEvent.ANY, ops[new.ordinal])
+        }
     }
 
     private fun registerChangeListener() = with(changeHandler) {
@@ -128,33 +158,50 @@ internal class DicomViewController(private val view: DicomView) {
     }
 
     fun locate() {
-        val cw = width / 2.0
-        val ch = height / 2.0
+        val cw = viewWidth / 2.0
+        val ch = viewHeight / 2.0
         val point = transform.transform(cw, ch)
         transform.prependTranslation(cw - point.x, ch - point.y)
     }
 
     fun scale(scale: Double) {
-        val cx = width / 2.0
-        val cy = height / 2.0
+        val cx = viewWidth / 2.0
+        val cy = viewHeight / 2.0
         transform.appendScale(scale, scale, cx, cy)
     }
 
-    fun scaleToActualSize() {
+    fun zoomIn() {
+        if (canZoomInProperty.value) {
+            scale(ZOOM_IN_STEP)
+        }
+    }
 
+    fun zoomOut() {
+        if (canZoomOutProperty.value) {
+            scale(ZOOM_OUT_STEP)
+        }
+    }
+
+    fun scaleToActualSize() {
+        if (!actualSizeProperty.value) {
+            val scale = 1.0 / (transform.scalingFactor * imageTransform.scalingFactor)
+            scale(scale)
+        }
     }
 
     fun rotate(angle: Double) {
-        val cx = width / 2.0
-        val cy = height / 2.0
-        rotationAngle = (rotationAngle + angle) % 360.0
-        transform.appendRotation(angle, cx, cy)
+        val cx = viewWidth / 2.0
+        val cy = viewHeight / 2.0
+        val r = if (isHorizontalFlip != isVerticalFlip) -angle else angle
+
+        rotationAngle = (rotationAngle + r) % 360.0
+        transform.appendRotation(r, cx, cy)
         updateOrientation()
     }
 
     fun horizontalFlip() {
-        val cx = width / 2.0
-        val cy = height / 2.0
+        val cx = viewWidth / 2.0
+        val cy = viewHeight / 2.0
         val rotation = rotationAngle
 
         pushDrawInterceptSignal()
@@ -172,8 +219,8 @@ internal class DicomViewController(private val view: DicomView) {
     }
 
     fun verticalFlip() {
-        val cx = width / 2.0
-        val cy = height / 2.0
+        val cx = viewWidth / 2.0
+        val cy = viewHeight / 2.0
         val rotation = rotationAngle
 
         pushDrawInterceptSignal()
@@ -211,7 +258,7 @@ internal class DicomViewController(private val view: DicomView) {
         val vr = Vector3d(-orientation[0], -orientation[1], -orientation[2])
         val vc = Vector3d(-orientation[3], -orientation[4], -orientation[5])
 
-        val rotation = rotationAngle
+        val rotation = Math.toRadians(rotationAngle)
         if (rotation != 0.0) {
             val vn = BodyOrientation.computeNormalVector(orientation)
             BodyOrientation.rotate(vr, vn, -rotation, vr)
@@ -296,9 +343,14 @@ internal class DicomViewController(private val view: DicomView) {
     }
 
     private fun updateImageTransform() {
-        if (width > 0 && height > 0) {
+        if (viewWidth > 0 && viewHeight > 0) {
             view.dicomImage?.let { img ->
-                imageTransform.calculateTransform(width, height, img.width.toDouble(), img.height.toDouble())
+                val imageTransform = imageTransform
+                val tempTransform = tempTransform.apply {
+                    setToTransform(imageTransform)
+                    calculateTransform(viewWidth, viewHeight, img.width.toDouble(), img.height.toDouble())
+                }
+                imageTransform.setToTransform(tempTransform)
             }
         }
     }
@@ -321,12 +373,12 @@ internal class DicomViewController(private val view: DicomView) {
     }
 
     private fun drawContent() {
-        if (drawInterceptSignal > 0 || width <= 0 || height <= 0) {
+        if (drawInterceptSignal > 0 || viewWidth <= 0 || viewHeight <= 0) {
             return
         }
 
         val gc = canvas.graphicsContext2D
-        gc.fillRect(0.0, 0.0, width, height)
+        gc.fillRect(0.0, 0.0, viewWidth, viewHeight)
 
         val image = view.dicomImage ?: return
         gc.save()
@@ -340,6 +392,9 @@ internal class DicomViewController(private val view: DicomView) {
         private const val REF_IMAGE = "IMAGE"
         private const val REF_COLOR_WINDOWING = "COLOR_WINDOWING"
         private const val REF_SIZE = "SIZE"
+
+        private const val ZOOM_IN_STEP = 2.0
+        private const val ZOOM_OUT_STEP = 0.5
 
         private val DATE_FORMATTER = SimpleDateFormat("yyyy/MM/dd")
         private val TIME_FORMATTER = SimpleDateFormat("HH:mm:ss")
