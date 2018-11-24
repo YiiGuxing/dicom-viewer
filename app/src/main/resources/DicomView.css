@@ -1,4 +1,5 @@
 .label {
-    -fx-text-fill: white;
     -fx-padding: 10;
+    -fx-text-fill: white;
+    -fx-effect: dropshadow(one-pass-box, black, 1, 0, 1, 1);
 }
