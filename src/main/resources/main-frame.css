@@ -1,5 +1,11 @@
+/*******************************************************************************
+ *                                                                             *
+ * Drop-Label                                                                  *
+ *                                                                             *
+ ******************************************************************************/
+
 .drop-label {
-    -fx-text-fill: #a0a0a0;
+    -fx-text-fill: white;
     -fx-graphic-text-gap: 15;
     -fx-content-display: top;
 }
@@ -9,5 +15,34 @@
 }
 
 .drop-label SVGPath {
-    -fx-fill: #a0a0a0;
+    -fx-fill: white;
+}
+
+/*******************************************************************************
+ *                                                                             *
+ * ToolBar                                                                     *
+ *                                                                             *
+ ******************************************************************************/
+
+.tool-bar {
+    -fx-pref-height: 34;
+}
+
+.tool-bar .button,
+.tool-bar .toggle-button {
+    -fx-min-width: 24;
+    -fx-min-height: 24;
+    -fx-max-width: 24;
+    -fx-max-height: 24;
+    -fx-pref-width: 24;
+    -fx-pref-height: 24;
+    -fx-graphic-text-gap: 0;
+    -fx-content-display: GRAPHIC_ONLY;
+}
+
+.tool-bar .separator .line {
+    -fx-border-color: transparent -fx-shadow-highlight-color transparent -fx-shadow-highlight-color,
+                        transparent transparent transparent -fx-text-box-border;
+    -fx-border-width: 1, 1;
+    -fx-border-insets: 0, 0 -1 0 1;
 }
