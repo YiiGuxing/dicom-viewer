@@ -5,6 +5,8 @@ import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
+import javafx.util.Callback
+import java.nio.file.Paths
 
 /**
  * DicomViewer
@@ -13,10 +15,23 @@ import javafx.stage.Stage
  */
 class DicomViewer : Application() {
     override fun start(primaryStage: Stage) {
-        val pane = FXMLLoader(javaClass.getResource("/main-frame.fxml")).load<Pane>()
+        val loader = FXMLLoader(javaClass.getResource("/main-frame.fxml"))
+        loader.controllerFactory = Callback { DicomViewerController(primaryStage) }
+        val mainFrame = loader.load<Pane>()
 
-        primaryStage.scene = Scene(pane)
-        primaryStage.show()
+        with(primaryStage) {
+            minWidth = 650.0
+            minHeight = 500.0
+            scene = Scene(mainFrame)
+            show()
+        }
+
+        parameters.raw.firstOrNull()
+            ?.takeIf { it.isNotEmpty() }
+            ?.let {
+                val controller: DicomViewerController = loader.getController()
+                controller.open(Paths.get(it))
+            }
     }
 }
 

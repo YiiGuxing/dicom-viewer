@@ -7,3 +7,7 @@
 .drop-label .text {
     -fx-font-smoothing-type: gray;
 }
+
+.drop-label SVGPath {
+    -fx-fill: #a0a0a0;
+}
