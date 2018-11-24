@@ -1,0 +1,9 @@
+.drop-label {
+    -fx-text-fill: #a0a0a0;
+    -fx-graphic-text-gap: 15;
+    -fx-content-display: top;
+}
+
+.drop-label .text {
+    -fx-font-smoothing-type: gray;
+}
