@@ -17,6 +17,7 @@ import javafx.scene.effect.DropShadow
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent
 import javafx.scene.paint.Color
+import javafx.scene.text.TextAlignment
 import javafx.scene.transform.Affine
 import javafx.scene.transform.TransformChangedEvent
 import org.dcm4che3.data.Tag
@@ -101,6 +102,9 @@ class DicomViewSkin(control: DicomView) :
                 effect = shadow
             }
         }
+
+        rightTopAnnotation.textAlignment = TextAlignment.RIGHT
+        rightBottomAnnotation.textAlignment = TextAlignment.RIGHT
     }
 
     private fun bindVisible() {
