@@ -1,11 +1,13 @@
 package cn.yiiguxing.tool.dcmviewer
 
+import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import javafx.fxml.FXML
 import javafx.scene.control.Button
 import javafx.scene.control.ToggleButton
 import javafx.scene.control.ToggleGroup
 import javafx.stage.Stage
+import org.dcm4che3.data.Tag
 import java.io.File
 
 /**
@@ -44,7 +46,13 @@ class DicomViewerController(private val stage: Stage) {
             setFile(file)
             read(0)
         }
+        setDicomImage(image)
+    }
+
+    private fun setDicomImage(image: DicomImage?) {
         dicomView.dicomImage = image
+        val patientName = image?.let { "${it.metadata.attributes.getString(Tag.PatientName)} - " } ?: ""
+        stage.title = "${patientName}Dicom Viewer"
     }
 
     @FXML

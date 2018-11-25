@@ -22,6 +22,7 @@ class DicomViewer : Application() {
         with(primaryStage) {
             minWidth = 650.0
             minHeight = 500.0
+            title = "Dicom Viewer"
             scene = Scene(mainFrame)
             show()
         }
