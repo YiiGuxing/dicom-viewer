@@ -16,6 +16,7 @@ import org.dcm4che3.data.Tag
 import java.text.SimpleDateFormat
 import java.util.concurrent.Callable
 import javax.vecmath.Vector3d
+import kotlin.math.abs
 
 /**
  * DicomViewController
@@ -121,7 +122,9 @@ class DicomViewController(val view: DicomView) {
         canZoomInProperty.bind(nextScale.lessThanOrEqualTo(MAX_SCALE))
         nextScale = canvasScale.multiply(ZOOM_OUT_STEP)
         canZoomOutProperty.bind(nextScale.greaterThanOrEqualTo(MIN_SCALE))
-        actualSizeProperty.bind(actualScale.isEqualTo(1))
+        actualSizeProperty.bind(Bindings.createBooleanBinding(Callable {
+            abs(actualScale.get() - 1.0) in 0.0..1.0E-12
+        }, actualScale))
 
         val scaleString = actualScale.asString("Scale: %.4f\n")
         val colorWindowingString = Bindings.createStringBinding(Callable {

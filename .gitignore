@@ -3,5 +3,6 @@
 build/
 sandbox/
 out/
+data/
 .DS_Store
 *.iml

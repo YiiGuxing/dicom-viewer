@@ -6,7 +6,7 @@ import javafx.scene.Scene
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
 import javafx.util.Callback
-import java.nio.file.Paths
+import java.io.File
 
 /**
  * DicomViewer
@@ -30,11 +30,17 @@ class DicomViewer : Application() {
             ?.takeIf { it.isNotEmpty() }
             ?.let {
                 val controller: DicomViewerController = loader.getController()
-                controller.open(Paths.get(it))
+                controller.open(File(it))
             }
+    }
+
+    companion object {
+        fun launch(vararg args: String) {
+            Application.launch(DicomViewer::class.java, *args)
+        }
     }
 }
 
 fun main(args: Array<String>) {
-    Application.launch(DicomViewer::class.java, *args)
+    DicomViewer.launch(*args)
 }

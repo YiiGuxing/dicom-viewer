@@ -85,11 +85,11 @@ class DicomView : AnchorPane() {
     }
 
     fun clockwiseRotate() {
-        controller.rotate(Math.toRadians(90.0))
+        controller.rotate(90.0)
     }
 
     fun counterclockwiseRotate() {
-        controller.rotate(Math.toRadians(-90.0))
+        controller.rotate(-90.0)
     }
 
     fun horizontalFlip() {

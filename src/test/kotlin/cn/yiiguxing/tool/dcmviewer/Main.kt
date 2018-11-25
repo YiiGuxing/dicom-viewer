@@ -10,12 +10,13 @@ import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.stage.Stage
+import java.io.File
 
 
 class App : Application() {
     override fun start(primaryStage: Stage) {
         val image = DicomImageIO().run {
-            setUri(javaClass.getResource("/test.dcm").toURI())
+            setFile(File("data/test.dcm"))
             read(0)
         }
 

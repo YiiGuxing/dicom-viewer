@@ -1,5 +1,6 @@
 package cn.yiiguxing.tool.dcmviewer
 
+import cn.yiiguxing.tool.dcmviewer.op.Op
 import javafx.scene.AccessibleAttribute
 import javafx.scene.control.ToggleButton
 
@@ -9,6 +10,8 @@ import javafx.scene.control.ToggleButton
  * Created by Yii.Guxing on 2018/11/25
  */
 class OpRadioButton : ToggleButton() {
+
+    var op: Op = Op.WINDOWING
 
     override fun fire() {
         if (toggleGroup == null || !isSelected) {
