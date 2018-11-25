@@ -17,7 +17,7 @@
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="600.0" prefWidth="900.0" stylesheets="@main-frame.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.yiiguxing.tool.dcmviewer.DicomViewerController">
+<VBox prefHeight="600.0" prefWidth="950.0" stylesheets="@main-frame.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.yiiguxing.tool.dcmviewer.DicomViewerController">
    <children>
       <ToolBar>
          <items>
@@ -139,11 +139,11 @@
                </tooltip></Button>
          </items>
       </ToolBar>
-      <SplitPane dividerPositions="0.7" prefHeight="160.0" prefWidth="200.0" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">
+      <SplitPane dividerPositions="0.7" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">
         <items>
-            <StackPane style="-fx-background-color: black;">
+            <StackPane minHeight="400.0" minWidth="465.0" style="-fx-background-color: black;">
                <children>
-                  <DicomView fx:id="dicomView" />
+                  <DicomView fx:id="dicomView" minHeight="10.0" minWidth="10.0" />
                   <Label mouseTransparent="true" opacity="0.75" styleClass="drop-label" text="Drag &amp; Drop .dcm File Here to Open">
                      <font>
                         <Font name="System Bold" size="18.0" />

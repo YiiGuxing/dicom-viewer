@@ -20,7 +20,7 @@ class DicomViewer : Application() {
         val mainFrame = loader.load<Pane>()
 
         with(primaryStage) {
-            minWidth = 650.0
+            minWidth = 700.0
             minHeight = 500.0
             title = "Dicom Viewer"
             scene = Scene(mainFrame)

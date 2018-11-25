@@ -1,11 +1,12 @@
+@file:Suppress("unused", "MemberVisibilityCanBePrivate")
+
 package cn.yiiguxing.tool.dcmviewer
 
 import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.op.Op
 import javafx.beans.property.*
-import javafx.fxml.FXMLLoader
-import javafx.scene.layout.AnchorPane
-import javafx.util.Callback
+import javafx.scene.control.Control
+import javafx.scene.control.Skin
 
 
 /**
@@ -13,9 +14,7 @@ import javafx.util.Callback
  *
  * Created by Yii.Guxing on 2018/11/19
  */
-class DicomView : AnchorPane() {
-
-    private val controller: DicomViewController
+class DicomView : Control() {
 
     val dicomImagePriority: ObjectProperty<DicomImage?> = DicomImagePriority()
     var dicomImage: DicomImage? by dicomImagePriority
@@ -48,16 +47,14 @@ class DicomView : AnchorPane() {
     val opProperty: ObjectProperty<Op> = SimpleObjectProperty(this, "op", Op.WINDOWING)
     var op: Op by opProperty
 
-    init {
-        val loader = FXMLLoader(javaClass.getResource("/dicom-view.fxml"))
-        loader.setRoot(this)
-        loader.controllerFactory = Callback { DicomViewController(this) }
-        loader.load<AnchorPane>()
-        controller = loader.getController()
+    private val skin: DicomViewSkin get() = getSkin() as DicomViewSkin
 
-        _actualSizeProperty.bind(controller.actualSizeProperty)
-        _canZoomInProperty.bind(controller.canZoomInProperty)
-        _canZoomOutProperty.bind(controller.canZoomOutProperty)
+    init {
+        skinProperty().addListener { _, _, _ ->
+            _actualSizeProperty.bind(skin.actualSizeProperty)
+            _canZoomInProperty.bind(skin.canZoomInProperty)
+            _canZoomOutProperty.bind(skin.canZoomOutProperty)
+        }
     }
 
     fun setColorWindowing(windowWidth: Float, windowCenter: Float) {
@@ -69,39 +66,43 @@ class DicomView : AnchorPane() {
     }
 
     fun locate() {
-        controller.locate()
+        skin.locate()
     }
 
     fun zoomIn() {
-        controller.zoomIn()
+        skin.zoomIn()
     }
 
     fun zoomOut() {
-        controller.zoomOut()
+        skin.zoomOut()
     }
 
     fun zoomToActualSize() {
-        controller.scaleToActualSize()
+        skin.scaleToActualSize()
     }
 
     fun clockwiseRotate() {
-        controller.rotate(90.0)
+        skin.rotate(90.0)
     }
 
     fun counterclockwiseRotate() {
-        controller.rotate(-90.0)
+        skin.rotate(-90.0)
     }
 
     fun horizontalFlip() {
-        controller.horizontalFlip()
+        skin.horizontalFlip()
     }
 
     fun verticalFlip() {
-        controller.verticalFlip()
+        skin.verticalFlip()
     }
 
     fun reset() {
-        controller.reset()
+        skin.reset()
+    }
+
+    override fun createDefaultSkin(): Skin<*> {
+        return DicomViewSkin(this)
     }
 
     private inner class DicomImagePriority : ObjectPropertyBase<DicomImage?>() {

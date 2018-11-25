@@ -1,6 +1,6 @@
 package cn.yiiguxing.tool.dcmviewer.op
 
-import cn.yiiguxing.tool.dcmviewer.DicomViewController
+import cn.yiiguxing.tool.dcmviewer.DicomViewSkin
 import javafx.event.Event
 import javafx.event.EventHandler
 import javafx.scene.input.MouseEvent
@@ -10,12 +10,12 @@ import javafx.scene.input.MouseEvent
  *
  * Created by Yii.Guxing on 2018/11/24
  */
-abstract class Operation<T : Event>(private val controller: DicomViewController) : EventHandler<T> {
+abstract class Operation<T : Event>(private val skin: DicomViewSkin) : EventHandler<T> {
 
-    final override fun handle(event: T) = handle(controller, event)
+    final override fun handle(event: T) = handle(skin, event)
 
-    abstract fun handle(controller: DicomViewController, event: T)
+    abstract fun handle(skin: DicomViewSkin, event: T)
 
 }
 
-abstract class MouseOperation(controller: DicomViewController) : Operation<MouseEvent>(controller)
+abstract class MouseOperation(skin: DicomViewSkin) : Operation<MouseEvent>(skin)
