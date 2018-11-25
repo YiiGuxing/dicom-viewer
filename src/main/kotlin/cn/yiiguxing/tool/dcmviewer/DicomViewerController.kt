@@ -4,8 +4,11 @@ import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import javafx.fxml.FXML
 import javafx.scene.control.Button
+import javafx.scene.control.Label
 import javafx.scene.control.ToggleButton
 import javafx.scene.control.ToggleGroup
+import javafx.scene.input.DragEvent
+import javafx.scene.input.TransferMode
 import javafx.stage.Stage
 import org.dcm4che3.data.Tag
 import java.io.File
@@ -19,6 +22,9 @@ class DicomViewerController(private val stage: Stage) {
 
     @FXML
     private lateinit var dicomView: DicomView
+
+    @FXML
+    private lateinit var dropLabel: Label
     @FXML
     private lateinit var opGroup: ToggleGroup
     @FXML
@@ -33,6 +39,7 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private fun initialize() {
         dicomView.inverseProperty.bindBidirectional(invertButton.selectedProperty())
+        dropLabel.visibleProperty().bind(dicomView.dicomImagePriority.isNull)
         zoomInButton.disableProperty().bind(dicomView.canZoomInProperty.not())
         zoomOutButton.disableProperty().bind(dicomView.canZoomOutProperty.not())
         zoomToActualSizeButton.disableProperty().bind(dicomView.actualSizeProperty)
@@ -103,6 +110,45 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private fun reset() {
         dicomView.reset()
+    }
+
+    @FXML
+    private fun onDragOver(event: DragEvent) {
+        val db = event.dragboard
+        if (db.hasFiles()) {
+            val isSupportedFile = db
+                .files
+                .firstOrNull()
+                ?.extension
+                .let { ext ->
+                    FILE_EXTENSION_DCM.equals(ext, true) || FILE_EXTENSION_DICOM.equals(ext, true)
+                }
+            if (isSupportedFile) {
+                event.acceptTransferModes(TransferMode.LINK)
+            }
+        }
+        event.consume()
+    }
+
+    @FXML
+    private fun onDragDropped(event: DragEvent) {
+        var success = false
+        val db = event.dragboard
+        if (db.hasFiles()) {
+            db.files
+                .firstOrNull()
+                ?.let {
+                    open(it)
+                    success = true
+                }
+        }
+        event.isDropCompleted = success
+        event.consume()
+    }
+
+    companion object {
+        private const val FILE_EXTENSION_DCM = "dcm"
+        private const val FILE_EXTENSION_DICOM = "dicom"
     }
 
 }
