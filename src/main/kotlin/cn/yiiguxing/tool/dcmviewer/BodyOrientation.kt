@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package cn.yiiguxing.tool.dcmviewer
 
 import java.lang.Math.abs
@@ -93,8 +95,7 @@ enum class BodyOrientation(val labelChar: Char) {
             vectorY: Double,
             vectorZ: Double,
             deviation: Double = DEFAULT_DEVIATION
-        )
-                : List<BodyOrientation> {
+        ): List<BodyOrientation> {
             val result = ArrayList<BodyOrientation>(2)
             val ox = if (vectorX < 0) RIGHT else LEFT
             val oy = if (vectorY < 0) ANTERIOR else POSTERIOR
