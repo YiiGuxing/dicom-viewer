@@ -65,7 +65,12 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private fun openNewFile() {
         with(FileChooser()) {
-            extensionFilters.add(FileChooser.ExtensionFilter("Dicom files", "*.dcm", "*.dicom"))
+            extensionFilters.add(
+                FileChooser.ExtensionFilter(
+                    "Dicom files",
+                    "*.$FILE_EXTENSION_DCM", "*.$FILE_EXTENSION_DICOM"
+                )
+            )
             showOpenDialog(stage)
         }?.let { open(it) }
     }
