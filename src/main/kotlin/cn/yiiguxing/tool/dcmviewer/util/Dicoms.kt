@@ -28,6 +28,6 @@ val DicomMetaData.attributeItems: List<AttributeItem>
             val description = ElementDictionary.keywordOf(tag, null).takeIf { it.isNotEmpty() } ?: "PrivateTag"
             items += AttributeItem(tag, vr, description, value, valueString)
             true
-        }, false)
+        }, true)
         return items.toList()
     }
