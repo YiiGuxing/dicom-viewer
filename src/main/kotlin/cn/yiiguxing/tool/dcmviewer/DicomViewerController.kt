@@ -9,6 +9,7 @@ import javafx.scene.control.ToggleButton
 import javafx.scene.control.ToggleGroup
 import javafx.scene.input.DragEvent
 import javafx.scene.input.TransferMode
+import javafx.stage.FileChooser
 import javafx.stage.Stage
 import org.dcm4che3.data.Tag
 import java.io.File
@@ -22,7 +23,6 @@ class DicomViewerController(private val stage: Stage) {
 
     @FXML
     private lateinit var dicomView: DicomView
-
     @FXML
     private lateinit var dropLabel: Label
     @FXML
@@ -49,9 +49,9 @@ class DicomViewerController(private val stage: Stage) {
     }
 
     fun open(file: File) {
-        val image = DicomImageIO().run {
-            setFile(file)
-            read(0)
+        val image = DicomImageIO().use { io ->
+            io.setFile(file)
+            io.read(0)
         }
         setDicomImage(image)
     }
@@ -64,7 +64,10 @@ class DicomViewerController(private val stage: Stage) {
 
     @FXML
     private fun openNewFile() {
-        println("openNewFile")
+        with(FileChooser()) {
+            extensionFilters.add(FileChooser.ExtensionFilter("Dicom files", "*.dcm", "*.dicom"))
+            showOpenDialog(stage)
+        }?.let { open(it) }
     }
 
     @FXML
