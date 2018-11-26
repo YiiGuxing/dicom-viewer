@@ -611,6 +611,21 @@ class DicomImageIO : Closeable {
     }
 
     fun dispose() {
+        try {
+            iis?.close()
+        } catch (e: Exception) {
+            LOG.error("close iis", e)
+        }
+        try {
+            dis?.close()
+        } catch (e: Exception) {
+            LOG.error("close dis", e)
+        }
+        try {
+            epdiis?.close()
+        } catch (e: Exception) {
+            LOG.error("close epdiis", e)
+        }
         resetInternalState()
     }
 
