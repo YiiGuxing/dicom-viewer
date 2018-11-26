@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package cn.yiiguxing.tool.dcmviewer.image
 
 import cn.yiiguxing.tool.dcmviewer.getValue
@@ -52,7 +54,9 @@ class DicomImage(
     private var updateLazy = false
     private var changed = false
 
-    val orientation: DoubleArray? = metadata.attributes.getDoubles(Tag.ImageOrientationPatient)
+    val orientation: DoubleArray? = metadata.attributes
+        .takeIf { it.contains(Tag.ImageOrientationPatient) }
+        ?.getDoubles(Tag.ImageOrientationPatient)
 
     init {
         val (ww, wc) = processor.getDefaultWindowing(sourceRaster)
@@ -138,9 +142,6 @@ class DicomImage(
         processor.windowCenter = windowCenter
         processor.inverse = inverse
         processor.process(sourceRaster, displayImage.pixelWriter, frame, buffer)
-    }
-
-    fun draw(g: Graphics2D, xform: AffineTransform? = null) {
     }
 
     fun draw(gc: GraphicsContext, x: Double = 0.0, y: Double = 0.0) {

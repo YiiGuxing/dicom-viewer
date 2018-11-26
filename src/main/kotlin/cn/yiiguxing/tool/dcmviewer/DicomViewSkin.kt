@@ -113,10 +113,14 @@ class DicomViewSkin(control: DicomView) :
         rightTopAnnotation.visibleProperty().bind(hasImage)
         leftBottomAnnotation.visibleProperty().bind(hasImage)
         rightBottomAnnotation.visibleProperty().bind(hasImage)
-        leftOrientation.visibleProperty().bind(hasImage)
-        topOrientation.visibleProperty().bind(hasImage)
-        rightOrientation.visibleProperty().bind(hasImage)
-        bottomOrientation.visibleProperty().bind(hasImage)
+
+        val hasOrientation = Bindings.createBooleanBinding(Callable {
+            skinnable.dicomImage?.orientation != null
+        }, skinnable.dicomImagePriority)
+        leftOrientation.visibleProperty().bind(hasOrientation)
+        topOrientation.visibleProperty().bind(hasOrientation)
+        rightOrientation.visibleProperty().bind(hasOrientation)
+        bottomOrientation.visibleProperty().bind(hasOrientation)
     }
 
     private fun bindViewport() {
