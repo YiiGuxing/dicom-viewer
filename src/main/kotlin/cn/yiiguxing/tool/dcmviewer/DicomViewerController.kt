@@ -79,11 +79,7 @@ class DicomViewerController(private val stage: Stage) {
             Alerts.error("Can't open this file!", window = stage)
             return
         }
-        try {
-            setDicomImage(image)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        setDicomImage(image)
     }
 
     private fun setDicomImage(image: DicomImage?) {
