@@ -2,6 +2,7 @@ package cn.yiiguxing.tool.dcmviewer
 
 import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
+import cn.yiiguxing.tool.dcmviewer.util.Alerts
 import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
 import cn.yiiguxing.tool.dcmviewer.util.attributeItems
 import cn.yiiguxing.tool.dcmviewer.util.getAttributesAsGBKString

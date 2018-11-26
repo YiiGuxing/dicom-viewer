@@ -1,7 +1,7 @@
 package cn.yiiguxing.tool.dcmviewer
 
 import cn.yiiguxing.tool.dcmviewer.op.*
-import cn.yiiguxing.tool.dcmviewer.util.getAttributesAsGBKString
+import cn.yiiguxing.tool.dcmviewer.util.*
 import com.sun.javafx.scene.control.behavior.BehaviorBase
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase
 import javafx.beans.binding.Bindings

@@ -1,4 +1,4 @@
-package cn.yiiguxing.tool.dcmviewer
+package cn.yiiguxing.tool.dcmviewer.util
 
 import javafx.beans.binding.Bindings
 import javafx.beans.binding.DoubleBinding

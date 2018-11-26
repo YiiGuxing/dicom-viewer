@@ -1,6 +1,6 @@
 @file:Suppress("unused", "MemberVisibilityCanBePrivate")
 
-package cn.yiiguxing.tool.dcmviewer
+package cn.yiiguxing.tool.dcmviewer.util
 
 import javafx.scene.control.Alert
 import javafx.scene.control.ButtonType

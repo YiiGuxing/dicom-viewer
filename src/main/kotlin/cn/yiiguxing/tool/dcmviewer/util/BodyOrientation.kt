@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package cn.yiiguxing.tool.dcmviewer
+package cn.yiiguxing.tool.dcmviewer.util
 
 import java.lang.Math.abs
 import javax.vecmath.Vector3d
@@ -83,11 +83,21 @@ enum class BodyOrientation(val labelChar: Char) {
         }
 
         fun getBodyOrientations(vector: Vector3d, deviation: Double = DEFAULT_DEVIATION): List<BodyOrientation> {
-            return getBodyOrientations(vector.x, vector.y, vector.z, deviation)
+            return getBodyOrientations(
+                vector.x,
+                vector.y,
+                vector.z,
+                deviation
+            )
         }
 
         fun getBodyOrientations(vector: DoubleArray, deviation: Double = DEFAULT_DEVIATION): List<BodyOrientation> {
-            return getBodyOrientations(vector[0], vector[1], vector[2], deviation)
+            return getBodyOrientations(
+                vector[0],
+                vector[1],
+                vector[2],
+                deviation
+            )
         }
 
         fun getBodyOrientations(
@@ -150,10 +160,12 @@ inline val BodyOrientation.label: String
     get() = labelChar.toString()
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun Array<out BodyOrientation>.toLabel(): String = BodyOrientation.toLabel(*this)
+inline fun Array<out BodyOrientation>.toLabel(): String =
+    BodyOrientation.toLabel(*this)
 
 @Suppress("NOTHING_TO_INLINE")
-inline fun Iterable<BodyOrientation>.toLabel(): String = BodyOrientation.toLabel(this)
+inline fun Iterable<BodyOrientation>.toLabel(): String =
+    BodyOrientation.toLabel(this)
 
 @Suppress("NOTHING_TO_INLINE")
 inline fun Iterable<BodyOrientation>.opposites(): List<BodyOrientation> = map { it.opposite }
