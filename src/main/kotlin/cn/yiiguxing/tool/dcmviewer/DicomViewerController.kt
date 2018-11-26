@@ -3,10 +3,7 @@ package cn.yiiguxing.tool.dcmviewer
 import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import javafx.fxml.FXML
-import javafx.scene.control.Button
-import javafx.scene.control.Label
-import javafx.scene.control.ToggleButton
-import javafx.scene.control.ToggleGroup
+import javafx.scene.control.*
 import javafx.scene.input.DragEvent
 import javafx.scene.input.TransferMode
 import javafx.stage.FileChooser
@@ -49,9 +46,15 @@ class DicomViewerController(private val stage: Stage) {
     }
 
     fun open(file: File) {
-        val image = DicomImageIO().use { io ->
-            io.setFile(file)
-            io.read(0)
+        val image: DicomImage = try {
+            DicomImageIO().use { io ->
+                io.setFile(file)
+                io.read(0)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Alerts.error("Can't open this file!", window = stage)
+            return
         }
         setDicomImage(image)
     }
@@ -132,7 +135,7 @@ class DicomViewerController(private val stage: Stage) {
                     FILE_EXTENSION_DCM.equals(ext, true) || FILE_EXTENSION_DICOM.equals(ext, true)
                 }
             if (isSupportedFile) {
-                event.acceptTransferModes(TransferMode.LINK)
+                event.acceptTransferModes(TransferMode.MOVE)
             }
         }
         event.consume()
