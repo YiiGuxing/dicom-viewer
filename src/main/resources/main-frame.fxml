@@ -139,7 +139,7 @@
                </tooltip></Button>
          </items>
       </ToolBar>
-      <SplitPane dividerPositions="0.7" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">
+      <SplitPane dividerPositions="0.6" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">
         <items>
             <StackPane minHeight="400.0" minWidth="465.0" onDragDropped="#onDragDropped" onDragOver="#onDragOver" style="-fx-background-color: black;">
                <children>
@@ -154,10 +154,12 @@
                   </Label>
                </children>
             </StackPane>
-            <TableView minWidth="200.0" SplitPane.resizableWithParent="false">
+            <TableView fx:id="attributesTable" minWidth="200.0" SplitPane.resizableWithParent="false">
               <columns>
-                <TableColumn prefWidth="75.0" text="C1" />
-                <TableColumn prefWidth="75.0" text="C2" />
+                <TableColumn fx:id="tagColumn" editable="false" maxWidth="500.0" minWidth="50.0" prefWidth="75.0" text="Tag" />
+                  <TableColumn fx:id="vrColumn" editable="false" maxWidth="50.0" minWidth="30.0" prefWidth="30.0" sortable="false" text="VR" />
+                <TableColumn fx:id="descColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="150.0" text="Tag Description" />
+                  <TableColumn fx:id="valueColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="300.0" sortable="false" text="Value" />
               </columns>
             </TableView>
         </items>

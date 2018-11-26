@@ -1,6 +1,7 @@
 package cn.yiiguxing.tool.dcmviewer
 
 import cn.yiiguxing.tool.dcmviewer.op.*
+import cn.yiiguxing.tool.dcmviewer.util.getAttributesAsGBKString
 import com.sun.javafx.scene.control.behavior.BehaviorBase
 import com.sun.javafx.scene.control.skin.BehaviorSkinBase
 import javafx.beans.binding.Bindings
@@ -21,6 +22,7 @@ import javafx.scene.text.TextAlignment
 import javafx.scene.transform.Affine
 import javafx.scene.transform.TransformChangedEvent
 import org.dcm4che3.data.Tag
+import org.dcm4che3.data.VR
 import java.text.SimpleDateFormat
 import java.util.concurrent.Callable
 import javax.vecmath.Vector3d
@@ -307,9 +309,10 @@ class DicomViewSkin(control: DicomView) :
     private fun onImageChanged() {
         val image = skinnable.dicomImage
         if (image != null) {
-            val attrs = image.metadata.attributes
+            val metadata = image.metadata
+            val attrs = metadata.attributes
 
-            val name = attrs.getString(Tag.PatientName) ?: ""
+            val name = metadata.getAttributesAsGBKString(Tag.PatientName, VR.PN) as String
             val patientInfo = arrayOf(
                 attrs.getString(Tag.PatientSex),
                 attrs.getString(Tag.PatientAge),
@@ -320,7 +323,7 @@ class DicomViewSkin(control: DicomView) :
             leftTopAnnotation.text = "$name\n$patientInfo\n$seriesNumber\n$instanceNumber"
 
             rightTopAnnotation.text = arrayOf(
-                attrs.getString(Tag.InstitutionName),
+                metadata.getAttributesAsGBKString(Tag.InstitutionName, VR.LO) as String,
                 attrs.getString(Tag.Manufacturer),
                 attrs.getString(Tag.ManufacturerModelName),
                 attrs.getDate(Tag.ContentDate)?.let { DATE_FORMATTER.format(it) },

@@ -1,8 +1,6 @@
 package cn.yiiguxing.tool.dcmviewer.image
 
 
-import cn.yiiguxing.tool.dcmviewer.image.readFully
-import cn.yiiguxing.tool.dcmviewer.image.swapShorts
 import org.dcm4che3.data.*
 import org.dcm4che3.image.PhotometricInterpretation
 import org.dcm4che3.imageio.codec.ImageDescriptor
@@ -519,7 +517,6 @@ class DicomImageIO : Closeable {
                 this.patchJpegLS = param.patchJPEGLS
             }
         }
-        ds.setSpecificCharacterSet("GB18030")
     }
 
     private fun createSampleModel(dataType: Int, banded: Boolean): SampleModel {

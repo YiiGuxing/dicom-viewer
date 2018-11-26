@@ -2,13 +2,20 @@ package cn.yiiguxing.tool.dcmviewer
 
 import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
+import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
+import cn.yiiguxing.tool.dcmviewer.util.attributeItems
+import cn.yiiguxing.tool.dcmviewer.util.getAttributesAsGBKString
+import com.sun.javafx.binding.StringConstant
 import javafx.fxml.FXML
 import javafx.scene.control.*
 import javafx.scene.input.DragEvent
 import javafx.scene.input.TransferMode
 import javafx.stage.FileChooser
 import javafx.stage.Stage
+import javafx.util.Callback
 import org.dcm4che3.data.Tag
+import org.dcm4che3.data.VR
+import org.dcm4che3.util.TagUtils
 import java.io.File
 
 /**
@@ -32,6 +39,16 @@ class DicomViewerController(private val stage: Stage) {
     private lateinit var zoomOutButton: Button
     @FXML
     private lateinit var zoomToActualSizeButton: Button
+    @FXML
+    private lateinit var attributesTable: TableView<AttributeItem>
+    @FXML
+    private lateinit var tagColumn: TableColumn<AttributeItem, String>
+    @FXML
+    private lateinit var vrColumn: TableColumn<AttributeItem, String>
+    @FXML
+    private lateinit var descColumn: TableColumn<AttributeItem, String>
+    @FXML
+    private lateinit var valueColumn: TableColumn<AttributeItem, String>
 
     @FXML
     private fun initialize() {
@@ -43,6 +60,11 @@ class DicomViewerController(private val stage: Stage) {
         opGroup.selectedToggleProperty().addListener { _, _, op ->
             (op as? OpRadioButton)?.op?.let { dicomView.op = it }
         }
+
+        tagColumn.cellValueFactory = Callback { StringConstant.valueOf(TagUtils.toString(it.value.tag)) }
+        vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.vr.name) }
+        descColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.description) }
+        valueColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.valueString) }
     }
 
     fun open(file: File) {
@@ -56,13 +78,25 @@ class DicomViewerController(private val stage: Stage) {
             Alerts.error("Can't open this file!", window = stage)
             return
         }
-        setDicomImage(image)
+        try {
+            setDicomImage(image)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun setDicomImage(image: DicomImage?) {
         dicomView.dicomImage = image
-        val patientName = image?.let { "${it.metadata.attributes.getString(Tag.PatientName)} - " } ?: ""
+
+        val metadata = image?.metadata
+        val patientName = metadata?.let { "${it.getAttributesAsGBKString(Tag.PatientName, VR.PN) as String} - " } ?: ""
         stage.title = "${patientName}Dicom Viewer"
+
+        if (metadata != null) {
+            attributesTable.items.addAll(metadata.attributeItems.sortedBy { it.tag })
+        } else {
+            attributesTable.items.clear()
+        }
     }
 
     @FXML
