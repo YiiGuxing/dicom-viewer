@@ -519,6 +519,7 @@ class DicomImageIO : Closeable {
                 this.patchJpegLS = param.patchJPEGLS
             }
         }
+        ds.setSpecificCharacterSet("GB18030")
     }
 
     private fun createSampleModel(dataType: Int, banded: Boolean): SampleModel {
