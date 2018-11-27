@@ -1,24 +1,28 @@
 package cn.yiiguxing.tool.dcmviewer.util
 
-import org.dcm4che3.data.ElementDictionary
-import org.dcm4che3.data.SpecificCharacterSet
-import org.dcm4che3.data.VR
-import org.dcm4che3.imageio.plugins.dcm.DicomMetaData
+import org.dcm4che3.data.*
 
 val SpecificCharset: SpecificCharacterSet = SpecificCharacterSet.valueOf("GBK")
 
-data class AttributeItem(val tag: Int, val vr: VR, val description: String, val value: Any, val valueString: String)
+data class AttributeItem(
+    val tag: Int,
+    val vr: VR,
+    val description: String,
+    val value: Any,
+    val valueString: String,
+    val children: List<AttributeItem> = emptyList()
+)
 
-fun DicomMetaData.getAttributesAsGBKString(tag: Int, vr: VR): Any {
-    return vr.toStrings(attributes.getBytes(tag), bigEndian(), SpecificCharset).toString()
+fun Attributes.getGBKString(tag: Int, vr: VR): Any {
+    return vr.toStrings(getBytes(tag), bigEndian(), SpecificCharset).toString()
 }
 
-val DicomMetaData.attributeItems: List<AttributeItem>
+val Attributes.items: List<AttributeItem>
     get() {
         val sb = StringBuilder()
-        val items = ArrayList<AttributeItem>(attributes.size())
+        val items = ArrayList<AttributeItem>(size())
         val isBigEndian = bigEndian()
-        attributes.accept({ _, tag, vr, value ->
+        val visitor = Attributes.Visitor { _, tag, vr, value ->
             sb.clear()
             val valueString = when {
                 vr.isInlineBinary -> "Binary data"
@@ -26,8 +30,15 @@ val DicomMetaData.attributeItems: List<AttributeItem>
                 else -> ""
             }
             val description = ElementDictionary.keywordOf(tag, null).takeIf { it.isNotEmpty() } ?: "PrivateTag"
-            items += AttributeItem(tag, vr, description, value, valueString)
+            val children = if (value is Sequence) {
+                value.map { it.items }.flatten()
+            } else {
+                emptyList()
+            }
+
+            items += AttributeItem(tag, vr, description, value, valueString, children)
             true
-        }, true)
+        }
+        accept(visitor, false)
         return items.toList()
     }

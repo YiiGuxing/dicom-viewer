@@ -6,12 +6,12 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
-<?import javafx.scene.control.TableColumn?>
-<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
@@ -154,14 +154,14 @@
                   </Label>
                </children>
             </StackPane>
-            <TableView fx:id="attributesTable" minWidth="200.0" SplitPane.resizableWithParent="false">
+            <TreeTableView fx:id="attributesTable" minWidth="200.0" showRoot="false">
               <columns>
-                <TableColumn fx:id="tagColumn" editable="false" maxWidth="500.0" minWidth="50.0" prefWidth="75.0" text="Tag" />
-                  <TableColumn fx:id="vrColumn" editable="false" maxWidth="50.0" minWidth="30.0" prefWidth="30.0" sortable="false" text="VR" />
-                <TableColumn fx:id="descColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="150.0" text="Tag Description" />
-                  <TableColumn fx:id="valueColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="300.0" sortable="false" text="Value" />
+                <TreeTableColumn fx:id="tagColumn" editable="false" maxWidth="500.0" minWidth="50.0" prefWidth="110.0" text="Tag" />
+                <TreeTableColumn fx:id="vrColumn" editable="false" maxWidth="50.0" minWidth="30.0" prefWidth="30.0" sortable="false" text="VR" />
+                <TreeTableColumn fx:id="descColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="150.0" text="Tag Description" />
+                <TreeTableColumn fx:id="valueColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="300.0" sortable="false" text="Value" />
               </columns>
-            </TableView>
+            </TreeTableView>
         </items>
       </SplitPane>
    </children>

@@ -63,10 +63,10 @@
 
 /*******************************************************************************
  *                                                                             *
- * Table-View                                                                  *
+ * Tree-Table-View                                                                  *
  *                                                                             *
  ******************************************************************************/
 
-.table-view .column-header-background .label {
+.tree-table-view .column-header-background .label {
     -fx-font-weight: normal;
 }

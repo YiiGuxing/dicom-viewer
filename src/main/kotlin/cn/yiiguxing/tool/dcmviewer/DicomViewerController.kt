@@ -4,8 +4,8 @@ import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import cn.yiiguxing.tool.dcmviewer.util.Alerts
 import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
-import cn.yiiguxing.tool.dcmviewer.util.attributeItems
-import cn.yiiguxing.tool.dcmviewer.util.getAttributesAsGBKString
+import cn.yiiguxing.tool.dcmviewer.util.getGBKString
+import cn.yiiguxing.tool.dcmviewer.util.items
 import com.sun.javafx.binding.StringConstant
 import javafx.fxml.FXML
 import javafx.scene.control.*
@@ -41,15 +41,15 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private lateinit var zoomToActualSizeButton: Button
     @FXML
-    private lateinit var attributesTable: TableView<AttributeItem>
+    private lateinit var attributesTable: TreeTableView<AttributeItem>
     @FXML
-    private lateinit var tagColumn: TableColumn<AttributeItem, String>
+    private lateinit var tagColumn: TreeTableColumn<AttributeItem, String>
     @FXML
-    private lateinit var vrColumn: TableColumn<AttributeItem, String>
+    private lateinit var vrColumn: TreeTableColumn<AttributeItem, String>
     @FXML
-    private lateinit var descColumn: TableColumn<AttributeItem, String>
+    private lateinit var descColumn: TreeTableColumn<AttributeItem, String>
     @FXML
-    private lateinit var valueColumn: TableColumn<AttributeItem, String>
+    private lateinit var valueColumn: TreeTableColumn<AttributeItem, String>
 
     @FXML
     private fun initialize() {
@@ -62,10 +62,10 @@ class DicomViewerController(private val stage: Stage) {
             (op as? OpRadioButton)?.op?.let { dicomView.op = it }
         }
 
-        tagColumn.cellValueFactory = Callback { StringConstant.valueOf(TagUtils.toString(it.value.tag)) }
-        vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.vr.name) }
-        descColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.description) }
-        valueColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.valueString) }
+        tagColumn.cellValueFactory = Callback { StringConstant.valueOf(TagUtils.toString(it.value.value.tag)) }
+        vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.vr.name) }
+        descColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.description) }
+        valueColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.valueString) }
     }
 
     fun open(file: File) {
@@ -85,14 +85,25 @@ class DicomViewerController(private val stage: Stage) {
     private fun setDicomImage(image: DicomImage?) {
         dicomView.dicomImage = image
 
-        val metadata = image?.metadata
-        val patientName = metadata?.let { "${it.getAttributesAsGBKString(Tag.PatientName, VR.PN) as String} - " } ?: ""
+        val attributes = image?.metadata?.attributes
+        val patientName = attributes?.let { "${it.getGBKString(Tag.PatientName, VR.PN) as String} - " } ?: ""
         stage.title = "${patientName}Dicom Viewer"
 
-        if (metadata != null) {
-            attributesTable.items.addAll(metadata.attributeItems.sortedBy { it.tag })
+        if (attributes != null) {
+            attributesTable.root = TreeItem<AttributeItem>(null).also { root ->
+                attributes.items.buildTreeItem(root)
+            }
         } else {
-            attributesTable.items.clear()
+            attributesTable.root = null
+        }
+    }
+
+    private fun List<AttributeItem>.buildTreeItem(parent: TreeItem<AttributeItem>) {
+        val parentsChildren = parent.children
+        for (item in this) {
+            val element = TreeItem(item)
+            item.children.buildTreeItem(element)
+            parentsChildren.add(element)
         }
     }
 

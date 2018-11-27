@@ -309,10 +309,9 @@ class DicomViewSkin(control: DicomView) :
     private fun onImageChanged() {
         val image = skinnable.dicomImage
         if (image != null) {
-            val metadata = image.metadata
-            val attrs = metadata.attributes
+            val attrs = image.metadata.attributes
 
-            val name = metadata.getAttributesAsGBKString(Tag.PatientName, VR.PN) as String
+            val name = attrs.getGBKString(Tag.PatientName, VR.PN) as String
             val patientInfo = arrayOf(
                 attrs.getString(Tag.PatientSex),
                 attrs.getString(Tag.PatientAge),
@@ -323,7 +322,7 @@ class DicomViewSkin(control: DicomView) :
             leftTopAnnotation.text = "$name\n$patientInfo\n$seriesNumber\n$instanceNumber"
 
             rightTopAnnotation.text = arrayOf(
-                metadata.getAttributesAsGBKString(Tag.InstitutionName, VR.LO) as String,
+                attrs.getGBKString(Tag.InstitutionName, VR.LO) as String,
                 attrs.getString(Tag.Manufacturer),
                 attrs.getString(Tag.ManufacturerModelName),
                 attrs.getDate(Tag.ContentDate)?.let { DATE_FORMATTER.format(it) },
