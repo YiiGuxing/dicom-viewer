@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import cn.yiiguxing.tool.dcmviewer.DicomView?>
+<?import cn.yiiguxing.tool.dcmviewer.FakeFocusHBox?>
 <?import cn.yiiguxing.tool.dcmviewer.OpRadioButton?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
@@ -141,7 +142,12 @@
                   <Tooltip text="Reset" />
                </tooltip></Button>
             <Pane HBox.hgrow="ALWAYS" />
-            <TextField fx:id="filterTextField" />
+            <FakeFocusHBox fx:id="dicomInfoToolBar" alignment="CENTER" focusTraversable="true" styleClass="dicom-info-bar">
+               <children>
+                  <TextField fx:id="filterTextField" />
+                  <ToggleButton fx:id="toggleDicomInfoButton" mnemonicParsing="false" onAction="#toggleDicomInfoPan" />
+               </children>
+            </FakeFocusHBox>
          </items>
       </ToolBar>
       <SplitPane dividerPositions="0.6" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">

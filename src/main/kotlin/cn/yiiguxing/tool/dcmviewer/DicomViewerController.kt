@@ -7,6 +7,7 @@ import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
 import cn.yiiguxing.tool.dcmviewer.util.getGBKStrings
 import cn.yiiguxing.tool.dcmviewer.util.items
 import com.sun.javafx.binding.StringConstant
+import javafx.beans.value.ChangeListener
 import javafx.fxml.FXML
 import javafx.scene.control.*
 import javafx.scene.input.DragEvent
@@ -42,6 +43,10 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private lateinit var filterTextField: TextField
     @FXML
+    private lateinit var toggleDicomInfoButton: ToggleButton
+    @FXML
+    private lateinit var dicomInfoToolBar: FakeFocusHBox
+    @FXML
     private lateinit var attributesTable: TreeTableView<AttributeItem>
     @FXML
     private lateinit var tagColumn: TreeTableColumn<AttributeItem, String>
@@ -57,6 +62,12 @@ class DicomViewerController(private val stage: Stage) {
 
     @FXML
     private fun initialize() {
+        bindDicomView()
+        initDicomInfoToolbar()
+        initDicomInfoTreeTable()
+    }
+
+    private fun bindDicomView() {
         dicomView.inverseProperty.bindBidirectional(invertButton.selectedProperty())
         dropLabel.visibleProperty().bind(dicomView.dicomImagePriority.isNull)
         zoomInButton.disableProperty().bind(dicomView.canZoomInProperty.not())
@@ -67,11 +78,16 @@ class DicomViewerController(private val stage: Stage) {
                 dicomView.op = it
             }
         }
+    }
 
-        filterTextField.textProperty().addListener { _, _, _ ->
-            updateAttributesTree()
-        }
+    private fun initDicomInfoToolbar() {
+        val focusedListener = ChangeListener<Boolean> { _, _, focused -> dicomInfoToolBar.setFakeFocus(focused) }
+        filterTextField.focusedProperty().addListener(focusedListener)
+        toggleDicomInfoButton.focusedProperty().addListener(focusedListener)
+        filterTextField.textProperty().addListener { _, _, _ -> updateAttributesTree() }
+    }
 
+    private fun initDicomInfoTreeTable() {
         attributesTable.root = treeRoot
         tagColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.tagString) }
         vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.vrString) }
@@ -197,6 +213,11 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private fun reset() {
         dicomView.reset()
+    }
+
+    @FXML
+    private fun toggleDicomInfoPan() {
+        println(toggleDicomInfoButton.isSelected)
     }
 
     @FXML
