@@ -6,12 +6,15 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.control.ToolBar?>
 <?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.TreeTableColumn?>
 <?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import javafx.scene.shape.SVGPath?>
@@ -137,6 +140,8 @@
                <tooltip>
                   <Tooltip text="Reset" />
                </tooltip></Button>
+            <Pane HBox.hgrow="ALWAYS" />
+            <TextField fx:id="filterTextField" />
          </items>
       </ToolBar>
       <SplitPane dividerPositions="0.6" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">

@@ -1,6 +1,7 @@
 package cn.yiiguxing.tool.dcmviewer.util
 
 import org.dcm4che3.data.*
+import org.dcm4che3.util.TagUtils
 
 val SpecificCharset: SpecificCharacterSet = SpecificCharacterSet.valueOf("GBK")
 
@@ -9,6 +10,8 @@ data class AttributeItem(
     val vr: VR,
     val description: String,
     val value: Any,
+    val tagString: String,
+    val vrString: String,
     val valueString: String,
     val children: List<AttributeItem> = emptyList()
 )
@@ -36,7 +39,7 @@ val Attributes.items: List<AttributeItem>
                 emptyList()
             }
 
-            items += AttributeItem(tag, vr, description, value, valueString, children)
+            items += AttributeItem(tag, vr, description, value, TagUtils.toString(tag), vr.name, valueString, children)
             true
         }
         accept(visitor, false)

@@ -16,7 +16,6 @@ import javafx.stage.Stage
 import javafx.util.Callback
 import org.dcm4che3.data.Tag
 import org.dcm4che3.data.VR
-import org.dcm4che3.util.TagUtils
 import java.io.File
 
 /**
@@ -41,6 +40,8 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private lateinit var zoomToActualSizeButton: Button
     @FXML
+    private lateinit var filterTextField: TextField
+    @FXML
     private lateinit var attributesTable: TreeTableView<AttributeItem>
     @FXML
     private lateinit var tagColumn: TreeTableColumn<AttributeItem, String>
@@ -50,6 +51,9 @@ class DicomViewerController(private val stage: Stage) {
     private lateinit var descColumn: TreeTableColumn<AttributeItem, String>
     @FXML
     private lateinit var valueColumn: TreeTableColumn<AttributeItem, String>
+
+    private val treeRoot = TreeItem<AttributeItem>(null)
+    private var attributeItems: List<AttributeItem>? = null
 
     @FXML
     private fun initialize() {
@@ -61,11 +65,16 @@ class DicomViewerController(private val stage: Stage) {
         opGroup.selectedToggleProperty().addListener { _, _, op ->
             (op as? OpRadioButton)?.op?.let {
                 dicomView.op = it
-            }//wang yong xing [D:\Home\Data\dcm\3b4f2f3a7bcdce46ee16ce549fbd271023ff85e2\be2263adb00602127f9fb0f2d83d75] - Dicom Viewer
+            }
         }
 
-        tagColumn.cellValueFactory = Callback { StringConstant.valueOf(TagUtils.toString(it.value.value.tag)) }
-        vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.vr.name) }
+        filterTextField.textProperty().addListener { _, _, _ ->
+            updateAttributesTree()
+        }
+
+        attributesTable.root = treeRoot
+        tagColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.tagString) }
+        vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.vrString) }
         descColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.description) }
         valueColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.valueString) }
 
@@ -107,21 +116,28 @@ class DicomViewerController(private val stage: Stage) {
         } ?: ""
         stage.title = "${patientName}Dicom Viewer"
 
-        if (attributes != null) {
-            attributesTable.root = TreeItem<AttributeItem>(null).also { root ->
-                attributes.items.buildTreeItem(root)
-            }
-        } else {
-            attributesTable.root = null
+        attributeItems = attributes?.items
+        updateAttributesTree()
+    }
+
+    private fun updateAttributesTree() {
+        treeRoot.let { root ->
+            root.children.clear()
+            attributeItems?.buildTreeItem(root, filterTextField.text)
         }
     }
 
-    private fun List<AttributeItem>.buildTreeItem(parent: TreeItem<AttributeItem>) {
+    private fun List<AttributeItem>.buildTreeItem(parent: TreeItem<AttributeItem>, filter: String?) {
         val parentsChildren = parent.children
         for (item in this) {
-            val element = TreeItem(item)
-            item.children.buildTreeItem(element)
-            parentsChildren.add(element)
+            if (filter.isNullOrBlank()
+                || item.tagString.contains(filter, true)
+                || item.description.contains(filter, true)
+            ) {
+                val element = TreeItem(item)
+                item.children.buildTreeItem(element, filter)
+                parentsChildren.add(element)
+            }
         }
     }
 
