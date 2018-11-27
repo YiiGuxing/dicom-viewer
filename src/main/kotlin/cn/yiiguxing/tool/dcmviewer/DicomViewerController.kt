@@ -152,6 +152,7 @@ class DicomViewerController(private val stage: Stage) {
             if (filter.isNullOrBlank()
                 || item.tagString.contains(filter, true)
                 || item.description.contains(filter, true)
+                || item.valueString.contains(filter, true)
             ) {
                 val element = TreeItem(item)
                 item.children.buildTreeItem(element, filter)
