@@ -1,6 +1,6 @@
 package cn.yiiguxing.tool.dcmviewer.op
 
-import cn.yiiguxing.tool.dcmviewer.DicomViewSkin
+import cn.yiiguxing.tool.dcmviewer.control.skin.DicomViewSkin
 import cn.yiiguxing.tool.dcmviewer.util.scalingFactor
 import javafx.scene.input.MouseEvent
 import javafx.scene.input.ScrollEvent

@@ -4,7 +4,7 @@
  * Created by Yii.Guxing on 2018/11/20
  */
 
-package cn.yiiguxing.tool.dcmviewer
+package cn.yiiguxing.tool.dcmviewer.util
 
 import javafx.beans.value.*
 import kotlin.reflect.KProperty

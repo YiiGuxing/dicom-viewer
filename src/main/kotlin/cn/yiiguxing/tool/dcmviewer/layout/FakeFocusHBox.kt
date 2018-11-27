@@ -1,4 +1,4 @@
-package cn.yiiguxing.tool.dcmviewer
+package cn.yiiguxing.tool.dcmviewer.layout
 
 import javafx.scene.layout.HBox
 

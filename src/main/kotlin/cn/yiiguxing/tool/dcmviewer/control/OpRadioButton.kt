@@ -1,4 +1,4 @@
-package cn.yiiguxing.tool.dcmviewer
+package cn.yiiguxing.tool.dcmviewer.control
 
 import cn.yiiguxing.tool.dcmviewer.op.Op
 import javafx.scene.AccessibleAttribute

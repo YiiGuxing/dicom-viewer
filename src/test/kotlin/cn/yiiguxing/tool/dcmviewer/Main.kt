@@ -6,6 +6,7 @@
 
 package cn.yiiguxing.tool.dcmviewer
 
+import cn.yiiguxing.tool.dcmviewer.control.DicomView
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import javafx.application.Application
 import javafx.scene.Scene

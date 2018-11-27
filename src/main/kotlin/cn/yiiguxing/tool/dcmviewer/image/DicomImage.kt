@@ -2,8 +2,8 @@
 
 package cn.yiiguxing.tool.dcmviewer.image
 
-import cn.yiiguxing.tool.dcmviewer.getValue
-import cn.yiiguxing.tool.dcmviewer.setValue
+import cn.yiiguxing.tool.dcmviewer.util.getValue
+import cn.yiiguxing.tool.dcmviewer.util.setValue
 import javafx.beans.property.BooleanProperty
 import javafx.beans.property.ReadOnlyFloatProperty
 import javafx.beans.property.ReadOnlyFloatWrapper
