@@ -149,6 +149,7 @@ class DicomViewSkin(control: DicomView) :
     }
 
     private fun setupOp() {
+        canvas.addEventHandler(MouseEvent.MOUSE_PRESSED) { canvas.requestFocus() }
         canvas.addEventHandler(MouseEvent.ANY, ops[skinnable.op.ordinal])
         canvas.addEventHandler(ScrollEvent.ANY, ScaleWheelOp(this))
         skinnable.opProperty.addListener { _, old, new ->
@@ -158,24 +159,12 @@ class DicomViewSkin(control: DicomView) :
     }
 
     private fun registerChangeListener() {
-        registerChangeListener(canvas.widthProperty(),
-            REF_SIZE
-        )
-        registerChangeListener(canvas.heightProperty(),
-            REF_SIZE
-        )
-        registerChangeListener(skinnable.dicomImagePriority,
-            REF_IMAGE
-        )
-        registerChangeListener(skinnable.windowWidthProperty,
-            REF_COLOR_WINDOWING
-        )
-        registerChangeListener(skinnable.windowCenterProperty,
-            REF_COLOR_WINDOWING
-        )
-        registerChangeListener(skinnable.inverseProperty,
-            REF_COLOR_WINDOWING
-        )
+        registerChangeListener(canvas.widthProperty(), REF_SIZE)
+        registerChangeListener(canvas.heightProperty(), REF_SIZE)
+        registerChangeListener(skinnable.dicomImagePriority, REF_IMAGE)
+        registerChangeListener(skinnable.windowWidthProperty, REF_COLOR_WINDOWING)
+        registerChangeListener(skinnable.windowCenterProperty, REF_COLOR_WINDOWING)
+        registerChangeListener(skinnable.inverseProperty, REF_COLOR_WINDOWING)
     }
 
     fun translate(dx: Double, dy: Double) {
