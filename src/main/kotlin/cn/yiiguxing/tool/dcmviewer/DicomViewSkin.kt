@@ -311,7 +311,7 @@ class DicomViewSkin(control: DicomView) :
         if (image != null) {
             val attrs = image.metadata.attributes
 
-            val name = attrs.getGBKString(Tag.PatientName, VR.PN) as String
+            val name = attrs.getGBKStrings(Tag.PatientName, VR.PN, "") as String
             val patientInfo = arrayOf(
                 attrs.getString(Tag.PatientSex),
                 attrs.getString(Tag.PatientAge),
@@ -322,7 +322,7 @@ class DicomViewSkin(control: DicomView) :
             leftTopAnnotation.text = "$name\n$patientInfo\n$seriesNumber\n$instanceNumber"
 
             rightTopAnnotation.text = arrayOf(
-                attrs.getGBKString(Tag.InstitutionName, VR.LO) as String,
+                attrs.getGBKStrings(Tag.InstitutionName, VR.LO, "") as String,
                 attrs.getString(Tag.Manufacturer),
                 attrs.getString(Tag.ManufacturerModelName),
                 attrs.getDate(Tag.ContentDate)?.let { DATE_FORMATTER.format(it) },

@@ -13,8 +13,8 @@ data class AttributeItem(
     val children: List<AttributeItem> = emptyList()
 )
 
-fun Attributes.getGBKString(tag: Int, vr: VR): Any {
-    return vr.toStrings(getBytes(tag), bigEndian(), SpecificCharset).toString()
+fun Attributes.getGBKStrings(tag: Int, vr: VR, default: Any): Any {
+    return getBytes(tag)?.let { vr.toStrings(it, bigEndian(), SpecificCharset) } ?: default
 }
 
 val Attributes.items: List<AttributeItem>

@@ -156,10 +156,10 @@
             </StackPane>
             <TreeTableView fx:id="attributesTable" minWidth="200.0" showRoot="false">
               <columns>
-                <TreeTableColumn fx:id="tagColumn" editable="false" maxWidth="500.0" minWidth="50.0" prefWidth="110.0" text="Tag" />
+                <TreeTableColumn fx:id="tagColumn" editable="false" maxWidth="500.0" minWidth="50.0" prefWidth="75.0" text="Tag" />
                 <TreeTableColumn fx:id="vrColumn" editable="false" maxWidth="50.0" minWidth="30.0" prefWidth="30.0" sortable="false" text="VR" />
-                <TreeTableColumn fx:id="descColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="150.0" text="Tag Description" />
-                <TreeTableColumn fx:id="valueColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="300.0" sortable="false" text="Value" />
+                <TreeTableColumn fx:id="descColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="110.0" text="Tag Description" />
+                <TreeTableColumn fx:id="valueColumn" editable="false" maxWidth="1000.0" minWidth="50.0" prefWidth="200.0" sortable="false" text="Value" />
               </columns>
             </TreeTableView>
         </items>

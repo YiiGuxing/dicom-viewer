@@ -4,7 +4,7 @@ import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import cn.yiiguxing.tool.dcmviewer.util.Alerts
 import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
-import cn.yiiguxing.tool.dcmviewer.util.getGBKString
+import cn.yiiguxing.tool.dcmviewer.util.getGBKStrings
 import cn.yiiguxing.tool.dcmviewer.util.items
 import com.sun.javafx.binding.StringConstant
 import javafx.fxml.FXML
@@ -59,13 +59,20 @@ class DicomViewerController(private val stage: Stage) {
         zoomOutButton.disableProperty().bind(dicomView.canZoomOutProperty.not())
         zoomToActualSizeButton.disableProperty().bind(dicomView.actualSizeProperty)
         opGroup.selectedToggleProperty().addListener { _, _, op ->
-            (op as? OpRadioButton)?.op?.let { dicomView.op = it }
+            (op as? OpRadioButton)?.op?.let {
+                dicomView.op = it
+            }//wang yong xing [D:\Home\Data\dcm\3b4f2f3a7bcdce46ee16ce549fbd271023ff85e2\be2263adb00602127f9fb0f2d83d75] - Dicom Viewer
         }
 
         tagColumn.cellValueFactory = Callback { StringConstant.valueOf(TagUtils.toString(it.value.value.tag)) }
         vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.vr.name) }
         descColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.description) }
         valueColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.valueString) }
+
+        tagColumn.cellFactory = CellFactory
+        vrColumn.cellFactory = CellFactory
+        descColumn.cellFactory = CellFactory
+        valueColumn.cellFactory = CellFactory
     }
 
     fun open(file: File) {
@@ -79,14 +86,25 @@ class DicomViewerController(private val stage: Stage) {
             Alerts.error("Can't open this file!", window = stage)
             return
         }
-        setDicomImage(image)
+        setDicomImage(image, file)
     }
 
-    private fun setDicomImage(image: DicomImage?) {
+    private fun setDicomImage(image: DicomImage?, file: File) {
         dicomView.dicomImage = image
 
         val attributes = image?.metadata?.attributes
-        val patientName = attributes?.let { "${it.getGBKString(Tag.PatientName, VR.PN) as String} - " } ?: ""
+        val patientName = attributes?.let {
+            var patientName = it.getGBKStrings(Tag.PatientName, VR.PN, "") as String
+            if (patientName.length > 25) {
+                patientName = patientName.take(25) + "..."
+            }
+            var filePath = file.absolutePath
+            if (filePath.length > 65) {
+                filePath = filePath.take(30) + "..." + filePath.takeLast(30)
+            }
+
+            "$patientName [$filePath] - "
+        } ?: ""
         stage.title = "${patientName}Dicom Viewer"
 
         if (attributes != null) {
@@ -204,4 +222,20 @@ class DicomViewerController(private val stage: Stage) {
         private const val FILE_EXTENSION_DICOM = "dicom"
     }
 
+    object CellFactory : Callback<TreeTableColumn<AttributeItem, String>, TreeTableCell<AttributeItem, String>> {
+
+        override fun call(param: TreeTableColumn<AttributeItem, String>): TreeTableCell<AttributeItem, String> {
+            return object : TreeTableCell<AttributeItem, String>() {
+                override fun updateItem(item: String?, empty: Boolean) {
+                    if (item === getItem()) return
+
+                    super.updateItem(item, empty)
+
+                    text = item
+                    graphic = null
+                    tooltip = (tooltip ?: Tooltip()).also { it.text = item }
+                }
+            }
+        }
+    }
 }
