@@ -10,12 +10,14 @@ import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
 import cn.yiiguxing.tool.dcmviewer.util.getGBKStrings
 import cn.yiiguxing.tool.dcmviewer.util.items
 import com.sun.javafx.binding.StringConstant
+import javafx.application.Platform
 import javafx.beans.value.ChangeListener
 import javafx.fxml.FXML
 import javafx.scene.control.*
 import javafx.scene.input.DragEvent
 import javafx.scene.input.TransferMode
 import javafx.scene.layout.StackPane
+import javafx.scene.layout.VBox
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.util.Callback
@@ -30,6 +32,10 @@ import java.io.File
  */
 class DicomViewerController(private val stage: Stage) {
 
+    @FXML
+    private lateinit var frame: VBox
+    @FXML
+    private lateinit var toolbar: ToolBar
     @FXML
     private lateinit var dicomView: DicomView
     @FXML
@@ -73,6 +79,14 @@ class DicomViewerController(private val stage: Stage) {
         bindDicomView()
         initDicomInfoToolbar()
         initDicomInfoTreeTable()
+
+        // To Fix: Ah, my eyes!
+        frame.children.remove(contentPane)
+        frame.children.remove(toolbar)
+        Platform.runLater {
+            frame.children.add(toolbar)
+            frame.children.add(contentPane)
+        }
     }
 
     private fun bindDicomView() {

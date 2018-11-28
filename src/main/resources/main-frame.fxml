@@ -22,9 +22,9 @@
 <?import javafx.scene.shape.SVGPath?>
 <?import javafx.scene.text.Font?>
 
-<VBox prefHeight="600.0" prefWidth="950.0" stylesheets="@main-frame.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.yiiguxing.tool.dcmviewer.DicomViewerController">
+<VBox fx:id="frame" prefHeight="600.0" prefWidth="950.0" style="-fx-background-color: black;" stylesheets="@main-frame.css" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="cn.yiiguxing.tool.dcmviewer.DicomViewerController">
    <children>
-      <ToolBar>
+      <ToolBar fx:id="toolbar">
          <items>
             <Button mnemonicParsing="false" onAction="#openNewFile">
                <graphic>
