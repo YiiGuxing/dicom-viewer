@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import cn.yiiguxing.tool.dcmviewer.control.DicomView?>
-<?import cn.yiiguxing.tool.dcmviewer.layout.FakeFocusHBox?>
 <?import cn.yiiguxing.tool.dcmviewer.control.OpRadioButton?>
+<?import cn.yiiguxing.tool.dcmviewer.layout.FakeFocusHBox?>
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
@@ -144,13 +145,33 @@
             <Pane HBox.hgrow="ALWAYS" />
             <FakeFocusHBox fx:id="dicomInfoToolBar" alignment="CENTER" focusTraversable="true" styleClass="dicom-info-bar">
                <children>
-                  <TextField fx:id="filterTextField" />
-                  <ToggleButton fx:id="toggleDicomInfoButton" mnemonicParsing="false" onAction="#toggleDicomInfoPan" />
+                  <StackPane fx:id="searchPane">
+                     <children>
+                        <TextField fx:id="filterTextField">
+                           <padding>
+                              <Insets left="22.0" />
+                           </padding>
+                           <tooltip>
+                              <Tooltip text="Shearch DICOM Information" />
+                           </tooltip></TextField>
+                        <SVGPath content="M9.2723,10.7279l1.5556,-1.5556l4.4138,4.4138l-1.5556,1.5556zM6.75,12.5C3.5744,12.5 1,9.9256 1,6.75C1,3.5744 3.5744,1 6.75,1C9.9256,1 12.5,3.5744 12.5,6.75C12.5,9.9256 9.9256,12.5 6.75,12.5ZM6.75,10.5C8.8211,10.5 10.5,8.8211 10.5,6.75C10.5,4.6789 8.8211,3 6.75,3C4.6789,3 3,4.6789 3,6.75C3,8.8211 4.6789,10.5 6.75,10.5Z" styleClass="find-icon" StackPane.alignment="CENTER_LEFT">
+                           <StackPane.margin>
+                              <Insets left="5.0" />
+                           </StackPane.margin></SVGPath>
+                     </children>
+                  </StackPane>
+                  <ToggleButton fx:id="toggleDicomInfoButton" mnemonicParsing="false" onAction="#toggleDicomInfoPan">
+                     <graphic>
+                        <SVGPath content="M11,5h3v8h-3zM6,5h4v8h-4zM2,5h3v8h-3zM1,14h14v-12h-14zM2,8h13v-1h-13zM2,11h13v-1h-13z" />
+                     </graphic>
+                     <tooltip>
+                        <Tooltip text="Show DICOM Information" />
+                     </tooltip></ToggleButton>
                </children>
             </FakeFocusHBox>
          </items>
       </ToolBar>
-      <SplitPane dividerPositions="0.6" style="-fx-background-insets: 0; -fx-padding: 0;" VBox.vgrow="ALWAYS">
+      <SplitPane fx:id="contentPane" dividerPositions="0.6" styleClass="content-pane" VBox.vgrow="ALWAYS">
         <items>
             <StackPane minHeight="400.0" minWidth="465.0" onDragDropped="#onDragDropped" onDragOver="#onDragOver" style="-fx-background-color: black;">
                <children>
@@ -165,7 +186,7 @@
                   </Label>
                </children>
             </StackPane>
-            <TreeTableView fx:id="attributesTable" minWidth="200.0" showRoot="false">
+            <TreeTableView fx:id="dicomInfoTable" minWidth="200.0" showRoot="false">
               <columns>
                 <TreeTableColumn fx:id="tagColumn" editable="false" maxWidth="500.0" minWidth="50.0" prefWidth="75.0" text="Tag" />
                 <TreeTableColumn fx:id="vrColumn" editable="false" maxWidth="50.0" minWidth="30.0" prefWidth="30.0" sortable="false" text="VR" />

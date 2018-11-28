@@ -4,8 +4,17 @@
  *                                                                             *
  ******************************************************************************/
 
+.root {
+    -fx-icon-color: #4E4E4E;
+}
+
 .tooltip {
     -fx-font-size: 12;
+}
+
+.content-pane {
+    -fx-padding: 0;
+    -fx-background-insets: 0;
 }
 
 /*******************************************************************************
@@ -58,7 +67,7 @@
 }
 
 .tool-bar SVGPath {
-    -fx-fill: #4e4e4e;
+    -fx-fill: -fx-icon-color;
 }
 
 /*******************************************************************************
@@ -89,6 +98,10 @@
 .dicom-info-bar .toggle-button {
     -fx-background-color: -fx-outer-border, -fx-inner-border, -fx-body-color;
     -fx-background-insets: 1 1 1 0, 1, 2;
+    -fx-background-radius: 3, 2, 1;
+}
+
+.dicom-info-bar .toggle-button:selected {
     -fx-background-radius: 0 3 3 0, 0 2 2 0, 0 1 1 0;
 }
 
@@ -110,7 +123,23 @@
 .dicom-info-bar:focused .toggle-button {
     -fx-background-color: -fx-inner-border, -fx-body-color, -fx-faint-focus-color, -fx-body-color;
     -fx-background-insets: 1, 2, 1, 2.6;
+    -fx-background-radius: 2, 1, 1, 1;
+}
+
+.dicom-info-bar:focused .toggle-button:selected {
     -fx-background-radius: 0 2 2 0, 0 1 1 0, 0 1 1 0, 0 1 1 0;
+}
+
+.dicom-info-bar .toggle-button > SVGPath {
+    -fx-fill: #898989;
+}
+
+.dicom-info-bar .toggle-button:selected > SVGPath {
+    -fx-fill: -fx-icon-color;
+}
+
+.dicom-info-bar .find-icon {
+    -fx-fill: #bbbbbb;
 }
 
 /*******************************************************************************

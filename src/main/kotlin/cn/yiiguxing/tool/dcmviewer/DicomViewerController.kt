@@ -15,6 +15,7 @@ import javafx.fxml.FXML
 import javafx.scene.control.*
 import javafx.scene.input.DragEvent
 import javafx.scene.input.TransferMode
+import javafx.scene.layout.StackPane
 import javafx.stage.FileChooser
 import javafx.stage.Stage
 import javafx.util.Callback
@@ -32,6 +33,8 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private lateinit var dicomView: DicomView
     @FXML
+    private lateinit var contentPane: SplitPane
+    @FXML
     private lateinit var dropLabel: Label
     @FXML
     private lateinit var opGroup: ToggleGroup
@@ -46,11 +49,13 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private lateinit var filterTextField: TextField
     @FXML
+    private lateinit var searchPane: StackPane
+    @FXML
     private lateinit var toggleDicomInfoButton: ToggleButton
     @FXML
     private lateinit var dicomInfoToolBar: FakeFocusHBox
     @FXML
-    private lateinit var attributesTable: TreeTableView<AttributeItem>
+    private lateinit var dicomInfoTable: TreeTableView<AttributeItem>
     @FXML
     private lateinit var tagColumn: TreeTableColumn<AttributeItem, String>
     @FXML
@@ -88,10 +93,13 @@ class DicomViewerController(private val stage: Stage) {
         filterTextField.focusedProperty().addListener(focusedListener)
         toggleDicomInfoButton.focusedProperty().addListener(focusedListener)
         filterTextField.textProperty().addListener { _, _, _ -> updateAttributesTree() }
+
+        contentPane.items.remove(dicomInfoTable)
+        dicomInfoToolBar.children.remove(searchPane)
     }
 
     private fun initDicomInfoTreeTable() {
-        attributesTable.root = treeRoot
+        dicomInfoTable.root = treeRoot
         tagColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.tagString) }
         vrColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.vrString) }
         descColumn.cellValueFactory = Callback { StringConstant.valueOf(it.value.value.description) }
@@ -221,7 +229,16 @@ class DicomViewerController(private val stage: Stage) {
 
     @FXML
     private fun toggleDicomInfoPan() {
-        println(toggleDicomInfoButton.isSelected)
+        if (toggleDicomInfoButton.isSelected) {
+            contentPane.items.add(dicomInfoTable)
+            contentPane.setDividerPositions(0.6)
+            dicomInfoToolBar.children.add(0, searchPane)
+            toggleDicomInfoButton.tooltip.text = "Hide DICOM Information"
+        } else {
+            contentPane.items.remove(dicomInfoTable)
+            dicomInfoToolBar.children.remove(searchPane)
+            toggleDicomInfoButton.tooltip.text = "Show DICOM Information"
+        }
     }
 
     @FXML
