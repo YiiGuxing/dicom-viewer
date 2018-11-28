@@ -74,6 +74,8 @@ class DicomViewerController(private val stage: Stage) {
     private val treeRoot = TreeItem<AttributeItem>(null)
     private var attributeItems: List<AttributeItem>? = null
 
+    private var lastOpenFile: File? = null
+
     @FXML
     private fun initialize() {
         bindDicomView()
@@ -136,6 +138,7 @@ class DicomViewerController(private val stage: Stage) {
             Alerts.error("Can't open this file!", window = stage)
             return
         }
+        lastOpenFile = file
         setDicomImage(image, file)
     }
 
@@ -186,6 +189,7 @@ class DicomViewerController(private val stage: Stage) {
     @FXML
     private fun openNewFile() {
         with(FileChooser()) {
+            lastOpenFile?.parentFile?.let { initialDirectory = it }
             extensionFilters.add(
                 FileChooser.ExtensionFilter(
                     "Dicom files",
