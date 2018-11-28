@@ -101,8 +101,9 @@ class DicomViewSkin(control: DicomView) :
         val shadow = DropShadow(BlurType.ONE_PASS_BOX, Color.BLACK, 1.0, 1.0, 1.0, 1.0)
         for (content in contents) {
             (content as? Label)?.apply {
-                textFill = Color.WHITE
                 effect = shadow
+                textFill = Color.WHITE
+                isMouseTransparent = true
             }
         }
 
