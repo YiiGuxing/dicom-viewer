@@ -173,9 +173,9 @@ class DicomImageProcessor(private val metadata: DicomMetaData) {
 
     fun applyOverlay(
         frameIndex: Int, writer: PixelWriter,
-        attrs: Attributes, gg0000: Int, pixelValue: Int, ovlyData: ByteArray?
+        attrs: Attributes, gg0000: Int, pixelValue: Int, overlayData: ByteArray?
     ) {
-        var ovlyData = ovlyData
+        var ovlyData = overlayData
 
         val imageFrameOrigin = attrs.getInt(Tag.ImageFrameOrigin or gg0000, 1)
         val framesInOverlay = attrs.getInt(Tag.NumberOfFramesInOverlay or gg0000, 1)
