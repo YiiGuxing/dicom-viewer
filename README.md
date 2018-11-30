@@ -7,5 +7,5 @@
 Usage
 -----
 
-- Download the `.jar` file: [latest releases](https://github.com/YiiGuxing/dicom-viewer/releases/latest).
+- [Download the `.jar` file.](https://github.com/YiiGuxing/dicom-viewer/releases/latest)
 - Double-click to run (request Java 8).
