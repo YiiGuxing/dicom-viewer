@@ -6,7 +6,6 @@ import javafx.scene.Scene
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
 import javafx.util.Callback
-import java.io.File
 
 /**
  * DicomViewer
@@ -26,13 +25,6 @@ class DicomViewer : Application() {
             scene = Scene(mainFrame)
             show()
         }
-
-        parameters.raw.firstOrNull()
-            ?.takeIf { it.isNotEmpty() }
-            ?.let {
-                val controller: DicomViewerController = loader.getController()
-                controller.open(File(it))
-            }
     }
 
     companion object {
