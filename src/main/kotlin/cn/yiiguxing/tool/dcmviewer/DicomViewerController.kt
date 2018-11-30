@@ -11,7 +11,6 @@ import cn.yiiguxing.tool.dcmviewer.util.getGBKStrings
 import cn.yiiguxing.tool.dcmviewer.util.items
 import com.sun.javafx.binding.StringConstant
 import javafx.application.Platform
-import javafx.beans.value.ChangeListener
 import javafx.fxml.FXML
 import javafx.scene.control.*
 import javafx.scene.input.DragEvent
@@ -105,9 +104,17 @@ class DicomViewerController(private val stage: Stage) {
     }
 
     private fun initDicomInfoToolbar() {
-        val focusedListener = ChangeListener<Boolean> { _, _, focused -> dicomInfoToolBar.setFakeFocus(focused) }
-        filterTextField.focusedProperty().addListener(focusedListener)
-        toggleDicomInfoButton.focusedProperty().addListener(focusedListener)
+        filterTextField.focusedProperty().addListener { _, _, focused ->
+            dicomInfoToolBar.setFakeFocus(focused)
+            if (focused) {
+                Platform.runLater {
+                    filterTextField.selectAll()
+                }
+            }
+        }
+        toggleDicomInfoButton.focusedProperty().addListener { _, _, focused ->
+            dicomInfoToolBar.setFakeFocus(focused)
+        }
         filterTextField.textProperty().addListener { _, _, _ -> updateAttributesTree() }
 
         contentPane.items.remove(dicomInfoTable)
