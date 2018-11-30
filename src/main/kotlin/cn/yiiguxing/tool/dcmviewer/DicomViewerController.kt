@@ -218,6 +218,7 @@ class DicomViewerController(private val stage: Stage) {
         for (item in this) {
             if (filter.isNullOrBlank()
                 || item.tagString.contains(filter, true)
+                || item.vrString.contains(filter, true)
                 || item.description.contains(filter, true)
                 || item.valueString.contains(filter, true)
             ) {
