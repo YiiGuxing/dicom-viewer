@@ -13,6 +13,8 @@ import com.sun.javafx.binding.StringConstant
 import javafx.application.Platform
 import javafx.fxml.FXML
 import javafx.scene.control.*
+import javafx.scene.input.Clipboard
+import javafx.scene.input.ClipboardContent
 import javafx.scene.input.DragEvent
 import javafx.scene.input.TransferMode
 import javafx.scene.layout.StackPane
@@ -132,6 +134,39 @@ class DicomViewerController(private val stage: Stage) {
         vrColumn.cellFactory = CellFactory
         descColumn.cellFactory = CellFactory
         valueColumn.cellFactory = CellFactory
+
+        fun String.copy() {
+            val content = ClipboardContent()
+            content.putString(this)
+            Clipboard.getSystemClipboard().setContent(content)
+        }
+
+        val contextMenu = ContextMenu()
+        contextMenu.items.addAll(
+            MenuItem("Copy Tag").apply {
+                setOnAction { dicomInfoTable.selectionModel.selectedItem?.value?.tagString?.copy() }
+            },
+            MenuItem("Copy VR").apply {
+                setOnAction { dicomInfoTable.selectionModel.selectedItem?.value?.vrString?.copy() }
+            },
+            MenuItem("Copy Description").apply {
+                setOnAction { dicomInfoTable.selectionModel.selectedItem?.value?.description?.copy() }
+            },
+            MenuItem("Copy Value").apply {
+                setOnAction { dicomInfoTable.selectionModel.selectedItem?.value?.valueString?.copy() }
+            }
+        )
+
+        dicomInfoTable.setOnContextMenuRequested {
+            if (!contextMenu.isShowing && dicomInfoTable.selectionModel.selectedItem != null) {
+                contextMenu.show(dicomInfoTable, it.screenX, it.screenY)
+            }
+        }
+        dicomInfoTable.setOnMouseClicked {
+            if (contextMenu.isShowing) {
+                contextMenu.hide()
+            }
+        }
     }
 
     fun open(file: File) {
