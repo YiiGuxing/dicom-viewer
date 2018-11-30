@@ -3,6 +3,7 @@ package cn.yiiguxing.tool.dcmviewer
 import javafx.application.Application
 import javafx.fxml.FXMLLoader
 import javafx.scene.Scene
+import javafx.scene.image.Image
 import javafx.scene.layout.Pane
 import javafx.stage.Stage
 import javafx.util.Callback
@@ -21,6 +22,9 @@ class DicomViewer : Application() {
         with(primaryStage) {
             minWidth = 900.0
             minHeight = 500.0
+
+            icons.addAll(Image("/icons/icon16x16.png"), Image("/icons/icon32x32.png"))
+
             title = "Dicom Viewer"
             scene = Scene(mainFrame)
             show()
