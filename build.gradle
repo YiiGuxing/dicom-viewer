@@ -5,7 +5,7 @@ plugins {
 }
 
 group 'cn.yiiguxing.tool.dcmviewer'
-version = "${version}${buildNumber ? '-' + buildNumber : ''}"
+version = "v${version}${buildNumber ? '-' + buildNumber : ''}"
 mainClassName = 'cn.yiiguxing.tool.dcmviewer.DicomViewerKt'
 
 repositories {
