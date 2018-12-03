@@ -5,10 +5,7 @@ import cn.yiiguxing.tool.dcmviewer.control.OpRadioButton
 import cn.yiiguxing.tool.dcmviewer.image.DicomImage
 import cn.yiiguxing.tool.dcmviewer.image.DicomImageIO
 import cn.yiiguxing.tool.dcmviewer.layout.FakeFocusHBox
-import cn.yiiguxing.tool.dcmviewer.util.Alerts
-import cn.yiiguxing.tool.dcmviewer.util.AttributeItem
-import cn.yiiguxing.tool.dcmviewer.util.getGBKStrings
-import cn.yiiguxing.tool.dcmviewer.util.items
+import cn.yiiguxing.tool.dcmviewer.util.*
 import com.sun.javafx.binding.StringConstant
 import javafx.application.Platform
 import javafx.fxml.FXML
@@ -202,7 +199,7 @@ class DicomViewerController(private val stage: Stage) {
         } ?: ""
         stage.title = "${patientName}Dicom Viewer"
 
-        attributeItems = attributes?.items
+        attributeItems = image?.metadata?.attributeItems
         updateAttributesTree()
     }
 

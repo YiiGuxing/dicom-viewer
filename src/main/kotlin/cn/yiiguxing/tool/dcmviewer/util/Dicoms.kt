@@ -1,6 +1,7 @@
 package cn.yiiguxing.tool.dcmviewer.util
 
 import org.dcm4che3.data.*
+import org.dcm4che3.imageio.plugins.dcm.DicomMetaData
 import org.dcm4che3.util.TagUtils
 
 val SpecificCharset: SpecificCharacterSet = SpecificCharacterSet.valueOf("GBK")
@@ -19,6 +20,17 @@ data class AttributeItem(
 fun Attributes.getGBKStrings(tag: Int, vr: VR, default: Any): Any {
     return getBytes(tag)?.let { vr.toStrings(it, bigEndian(), SpecificCharset) } ?: default
 }
+
+val DicomMetaData.attributeItems: List<AttributeItem>
+    get() {
+        val fileMetaItems = fileMetaInformation.items
+        val attrItems = attributes.items
+
+        return ArrayList<AttributeItem>(fileMetaItems.size + attrItems.size).apply {
+            addAll(fileMetaItems)
+            addAll(attrItems)
+        }.toList()
+    }
 
 val Attributes.items: List<AttributeItem>
     get() {
